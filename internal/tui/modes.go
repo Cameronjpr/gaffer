@@ -27,7 +27,7 @@ type AppModel struct {
 
 func NewModel() AppModel {
 	// For now, hardcode Leeds vs Arsenal until manager mode is implemented
-	homeClub := game.GetClubByName("Leeds United")
+	homeClub := game.GetClubByName("Manchester City")
 	awayClub := game.GetClubByName("Arsenal")
 	match := game.NewMatch(homeClub, awayClub)
 

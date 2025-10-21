@@ -49,8 +49,9 @@ func (m PreMatchModel) View() string {
 
 	// Home team section
 	homeContent := lipgloss.JoinVertical(
-		lipgloss.Center,
+		lipgloss.Left,
 		lipgloss.NewStyle().Bold(true).Render(m.match.Home.Club.Name),
+		lipgloss.NewStyle().Italic(true).Render(m.match.Home.Formation),
 		"",
 		m.match.Home.GetLineup(),
 	)
@@ -60,8 +61,9 @@ func (m PreMatchModel) View() string {
 
 	// Away team section
 	awayContent := lipgloss.JoinVertical(
-		lipgloss.Center,
+		lipgloss.Left,
 		lipgloss.NewStyle().Bold(true).Render(m.match.Away.Club.Name),
+		lipgloss.NewStyle().Italic(true).Render(m.match.Away.Formation),
 		"",
 		m.match.Away.GetLineup(),
 	)

@@ -5,22 +5,10 @@ import "fmt"
 type CommentaryMessage struct {
 	Message string
 	Flash   bool
-	Event   Event
+	Event   EventType
 }
 
-type Event int
-
-const (
-	HalfStartsEvent Event = iota
-	HalfEndsEvent
-	HomeGoalScoredEvent
-	AwayGoalScoredEvent
-	PossessionChangedEvent
-	PossessionRetainedEvent
-	UnknownEvent
-)
-
-func getCommentaryForEvent(event Event, participant *MatchParticipant, match *Match) CommentaryMessage {
+func getCommentaryForEvent(event EventType, participant *MatchParticipant, match *Match) CommentaryMessage {
 	if match == nil {
 		return CommentaryMessage{Message: "Error reading match data", Flash: false}
 	}

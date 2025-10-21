@@ -11,34 +11,98 @@ var (
 	phases = 90
 )
 
+const goalscoringThreshold = 75
+
+// MatchPlayerParticipant represents a player participating in a specific match
+type MatchPlayerParticipant struct {
+	Player   *Player
+	Position string
+}
+
 // MatchParticipant represents a club participating in a specific match
 type MatchParticipant struct {
 	Club          *Club
-	Players       []string
+	Players       []MatchPlayerParticipant
+	Formation     string
 	Score         int
 	HasPossession bool
+	PlayerEvents  []PlayerEvent
 }
 
 // NewMatchParticipant creates a new match participant from a club
 func NewMatchParticipant(club *Club) *MatchParticipant {
+	// Assign players to 4-3-3 formation positions
+	// Positions: GK, RB, CB, CB, LB, CM, CM, CM, RW, ST, LW
+	positions := []string{"GK", "RB", "CB", "CB", "LB", "CM", "CM", "CM", "RW", "ST", "LW"}
+
+	matchPlayers := make([]MatchPlayerParticipant, 0, len(club.Players))
+	for i := range club.Players {
+		if i < len(positions) {
+			matchPlayers = append(matchPlayers, MatchPlayerParticipant{
+				Player:   &club.Players[i],
+				Position: positions[i],
+			})
+		}
+	}
+
 	return &MatchParticipant{
 		Club:          club,
-		Players:       []string{},
+		Players:       matchPlayers,
+		Formation:     "4-3-3",
 		Score:         0,
 		HasPossession: false,
 	}
 }
 
+func (p *MatchParticipant) GetStarPlayers() []MatchPlayerParticipant {
+	stars := make([]MatchPlayerParticipant, 0)
+	highestQuality := 0
+	for _, player := range p.Players {
+		if player.Player.Quality > highestQuality {
+			highestQuality = player.Player.Quality
+		}
+	}
+	for _, player := range p.Players {
+		if player.Player.Quality == highestQuality {
+			stars = append(stars, player)
+		}
+	}
+	return stars
+}
+
+func (p *MatchParticipant) GetRandomOutfielder() MatchPlayerParticipant {
+	outfielders := make([]MatchPlayerParticipant, 0)
+	for _, player := range p.Players {
+		if player.Position != "GK" {
+			outfielders = append(outfielders, player)
+		}
+	}
+	if len(outfielders) == 0 {
+		return MatchPlayerParticipant{}
+	}
+	return outfielders[rand.IntN(len(outfielders))]
+}
+
 func (p *MatchParticipant) GetLineup() string {
 	lineup := ""
-	for _, player := range p.Players {
-		lineup += fmt.Sprintf("%s\n", player)
+	stars := p.GetStarPlayers()
+	for _, matchPlayer := range p.Players {
+		suffix := ""
+		for _, star := range stars {
+			if star.Player.Name == matchPlayer.Player.Name {
+				suffix += " ★"
+			}
+		}
+
+		row := fmt.Sprintf("%s - %s%s\n", matchPlayer.Position, matchPlayer.Player.Name, suffix)
+		lineup += row
+
 	}
 	return lineup
 }
 
-func (p *MatchParticipant) AddPlayer(player string) {
-	p.Players = append(p.Players, player)
+func (p *MatchParticipant) AddPlayer(matchPlayer MatchPlayerParticipant) {
+	p.Players = append(p.Players, matchPlayer)
 }
 
 func (p *MatchParticipant) IncreaseScore() {
@@ -59,7 +123,6 @@ type Match struct {
 	CurrentPhase int
 	CurrentHalf  int
 	IsComplete   bool
-	IsHalfTime   bool
 	PhaseHistory []PhaseResult
 	Commentary   []CommentaryMessage
 }
@@ -80,47 +143,9 @@ func NewMatch(homeClub, awayClub *Club) Match {
 		Away:         NewMatchParticipant(awayClub),
 		CurrentPhase: 1,
 		CurrentHalf:  1,
-		IsComplete:   false,
-		IsHalfTime:   false,
 		PhaseHistory: make([]PhaseResult, 0),
 		Commentary:   make([]CommentaryMessage, 0),
 	}
-}
-
-func PlayMatch() {
-	// Example match for testing
-	homeClub := GetClubByName("Leeds United")
-	awayClub := GetClubByName("Arsenal")
-	m := NewMatch(homeClub, awayClub)
-
-	file, err := os.Create("game.log")
-	if err != nil {
-		fmt.Println("Error creating file:", err)
-		return
-	}
-	defer file.Close()
-
-	coinToss := rand.IntN(2) == 0
-	if coinToss {
-		m.Home.HasPossession = true
-	} else {
-		m.Away.HasPossession = true
-	}
-
-	for m.CurrentPhase <= 45 {
-		m.PlayPhase()
-		m.CurrentPhase++
-	}
-
-	m.CurrentHalf++
-
-	for m.CurrentPhase <= 90 {
-		m.PlayPhase()
-		m.CurrentPhase++
-	}
-
-	writeMatchLog(m)
-
 }
 
 func (m *Match) PlayPhase() PhaseResult {
@@ -134,7 +159,6 @@ func (m *Match) PlayPhase() PhaseResult {
 	goalsThisPhase := 0
 
 	if homePhaseStrength > awayPhaseStrength {
-
 		if m.Home.HasPossession {
 			m.Commentary = append(m.Commentary, getCommentaryForEvent(PossessionRetainedEvent, m.Home, m))
 		} else {
@@ -142,7 +166,6 @@ func (m *Match) PlayPhase() PhaseResult {
 			m.Away.LosePossession()
 			m.Commentary = append(m.Commentary, getCommentaryForEvent(PossessionChangedEvent, m.Home, m))
 		}
-
 	} else if homePhaseStrength < awayPhaseStrength {
 		if m.Away.HasPossession {
 			m.Commentary = append(m.Commentary, getCommentaryForEvent(PossessionRetainedEvent, m.Away, m))
@@ -153,7 +176,7 @@ func (m *Match) PlayPhase() PhaseResult {
 		}
 	}
 
-	if powerDiff < 80 {
+	if powerDiff < goalscoringThreshold {
 		return PhaseResult{
 			HomeRoll:          homeRoll,
 			AwayRoll:          awayRoll,
@@ -163,7 +186,7 @@ func (m *Match) PlayPhase() PhaseResult {
 			AwayGoals:         0,
 		}
 	}
-	if powerDiff > 80 {
+	if powerDiff > goalscoringThreshold {
 		goalsThisPhase = rand.IntN(2)
 	}
 
@@ -174,11 +197,13 @@ func (m *Match) PlayPhase() PhaseResult {
 		if homePhaseStrength > awayPhaseStrength {
 			homeGoals = goalsThisPhase
 			m.Commentary = append(m.Commentary, getCommentaryForEvent(HomeGoalScoredEvent, m.Home, m))
+			m.Home.PlayerEvents = append(m.Home.PlayerEvents, NewPlayerEvent(PlayerScoredEvent, *m.Home.GetRandomOutfielder().Player, m.CurrentPhase))
 		}
 
 		if homePhaseStrength < awayPhaseStrength {
 			awayGoals = goalsThisPhase
 			m.Commentary = append(m.Commentary, getCommentaryForEvent(AwayGoalScoredEvent, m.Away, m))
+			m.Away.PlayerEvents = append(m.Away.PlayerEvents, NewPlayerEvent(PlayerScoredEvent, *m.Away.GetRandomOutfielder().Player, m.CurrentPhase))
 		}
 	}
 
@@ -190,6 +215,14 @@ func (m *Match) PlayPhase() PhaseResult {
 		HomeGoals:         homeGoals,
 		AwayGoals:         awayGoals,
 	}
+}
+
+func (m Match) IsHalfTime() bool {
+	return m.CurrentPhase == 45
+}
+
+func (m Match) IsFullTime() bool {
+	return m.CurrentPhase == 90
 }
 
 func writeMatchLog(match Match) {
