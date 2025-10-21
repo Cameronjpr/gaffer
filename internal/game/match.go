@@ -11,26 +11,57 @@ var (
 	phases = 90
 )
 
-type Team struct {
-	Name     string
-	Strength int
-	Score    int
+// MatchParticipant represents a club participating in a specific match
+type MatchParticipant struct {
+	Club          *Club
+	Players       []string
+	Score         int
+	HasPossession bool
+}
+
+// NewMatchParticipant creates a new match participant from a club
+func NewMatchParticipant(club *Club) *MatchParticipant {
+	return &MatchParticipant{
+		Club:          club,
+		Players:       []string{},
+		Score:         0,
+		HasPossession: false,
+	}
+}
+
+func (p *MatchParticipant) GetLineup() string {
+	lineup := ""
+	for _, player := range p.Players {
+		lineup += fmt.Sprintf("%s\n", player)
+	}
+	return lineup
+}
+
+func (p *MatchParticipant) AddPlayer(player string) {
+	p.Players = append(p.Players, player)
+}
+
+func (p *MatchParticipant) IncreaseScore() {
+	p.Score++
+}
+
+func (p *MatchParticipant) WinPossession() {
+	p.HasPossession = true
+}
+
+func (p *MatchParticipant) LosePossession() {
+	p.HasPossession = false
 }
 
 type Match struct {
-	Home         Team
-	Away         Team
+	Home         *MatchParticipant
+	Away         *MatchParticipant
 	CurrentPhase int
 	CurrentHalf  int
 	IsComplete   bool
 	IsHalfTime   bool
 	PhaseHistory []PhaseResult
 	Commentary   []CommentaryMessage
-}
-
-type CommentaryMessage struct {
-	Message string
-	Flash   bool
 }
 
 type PhaseResult struct {
@@ -43,18 +74,10 @@ type PhaseResult struct {
 	AwayGoals         int
 }
 
-func createTeam(name string) Team {
-	return Team{
-		Name:     name,
-		Strength: rand.IntN(20),
-		Score:    0,
-	}
-}
-
-func NewMatch() Match {
+func NewMatch(homeClub, awayClub *Club) Match {
 	return Match{
-		Home:         createTeam("Home"),
-		Away:         createTeam("Away"),
+		Home:         NewMatchParticipant(homeClub),
+		Away:         NewMatchParticipant(awayClub),
 		CurrentPhase: 1,
 		CurrentHalf:  1,
 		IsComplete:   false,
@@ -65,7 +88,10 @@ func NewMatch() Match {
 }
 
 func PlayMatch() {
-	m := NewMatch()
+	// Example match for testing
+	homeClub := GetClubByName("Leeds United")
+	awayClub := GetClubByName("Arsenal")
+	m := NewMatch(homeClub, awayClub)
 
 	file, err := os.Create("game.log")
 	if err != nil {
@@ -73,6 +99,13 @@ func PlayMatch() {
 		return
 	}
 	defer file.Close()
+
+	coinToss := rand.IntN(2) == 0
+	if coinToss {
+		m.Home.HasPossession = true
+	} else {
+		m.Away.HasPossession = true
+	}
 
 	for m.CurrentPhase <= 45 {
 		m.PlayPhase()
@@ -94,14 +127,33 @@ func (m *Match) PlayPhase() PhaseResult {
 	homeRoll := rand.IntN(100)
 	awayRoll := rand.IntN(100)
 
-	homePhaseStrength := m.Home.Strength + homeRoll
-	awayPhaseStrength := m.Away.Strength + awayRoll
+	homePhaseStrength := m.Home.Club.Strength + homeRoll
+	awayPhaseStrength := m.Away.Club.Strength + awayRoll
 
 	powerDiff := math.Abs(float64(homePhaseStrength - awayPhaseStrength))
 	goalsThisPhase := 0
 
+	if homePhaseStrength > awayPhaseStrength {
+
+		if m.Home.HasPossession {
+			m.Commentary = append(m.Commentary, getCommentaryForEvent(PossessionRetainedEvent, m.Home, m))
+		} else {
+			m.Home.WinPossession()
+			m.Away.LosePossession()
+			m.Commentary = append(m.Commentary, getCommentaryForEvent(PossessionChangedEvent, m.Home, m))
+		}
+
+	} else if homePhaseStrength < awayPhaseStrength {
+		if m.Away.HasPossession {
+			m.Commentary = append(m.Commentary, getCommentaryForEvent(PossessionRetainedEvent, m.Away, m))
+		} else {
+			m.Away.WinPossession()
+			m.Home.LosePossession()
+			m.Commentary = append(m.Commentary, getCommentaryForEvent(PossessionChangedEvent, m.Away, m))
+		}
+	}
+
 	if powerDiff < 80 {
-		m.Commentary = append(m.Commentary, CommentaryMessage{Message: "...", Flash: false})
 		return PhaseResult{
 			HomeRoll:          homeRoll,
 			AwayRoll:          awayRoll,
@@ -121,12 +173,12 @@ func (m *Match) PlayPhase() PhaseResult {
 	if goalsThisPhase > 0 {
 		if homePhaseStrength > awayPhaseStrength {
 			homeGoals = goalsThisPhase
-			m.Commentary = append(m.Commentary, CommentaryMessage{Message: "Home team scores!", Flash: true})
+			m.Commentary = append(m.Commentary, getCommentaryForEvent(HomeGoalScoredEvent, m.Home, m))
 		}
 
 		if homePhaseStrength < awayPhaseStrength {
 			awayGoals = goalsThisPhase
-			m.Commentary = append(m.Commentary, CommentaryMessage{Message: "Away team scores!", Flash: true})
+			m.Commentary = append(m.Commentary, getCommentaryForEvent(AwayGoalScoredEvent, m.Away, m))
 		}
 	}
 
@@ -148,6 +200,6 @@ func writeMatchLog(match Match) {
 	}
 	defer file.Close()
 
-	fmt.Fprintf(file, "Home [%v] – [%v] Away\n", match.Home.Score, match.Away.Score)
+	fmt.Fprintf(file, "%v [%v] – [%v] %v\n", match.Home.Club.Name, match.Home.Score, match.Away.Score, match.Away.Club.Name)
 	fmt.Fprintf(file, "Phase %v\n", match.CurrentPhase)
 }
