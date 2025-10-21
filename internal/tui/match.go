@@ -91,8 +91,8 @@ func buildScoreWidget(homeTeam, awayTeam string, homeScore, awayScore, width int
 		Render(scoreStr)
 }
 
-// buildTimelineColumn builds a single timeline column with events
-func buildTimelineColumn(events []game.PlayerEvent, width int, align lipgloss.Position) string {
+// buildTimelineColumnFromEvents builds a single timeline column with events
+func buildTimelineColumnFromEvents(events []game.Event, width int, align lipgloss.Position) string {
 	timeline := ""
 	for _, event := range events {
 		timeline += event.String()
@@ -104,13 +104,13 @@ func buildTimelineColumn(events []game.PlayerEvent, width int, align lipgloss.Po
 		Render(timeline)
 }
 
-// buildTimeline creates a centered timeline with home and away events
-func buildTimeline(homeEvents, awayEvents []game.PlayerEvent, colWidth int) string {
+// buildTimelineFromEvents creates a centered timeline with home and away events
+func buildTimelineFromEvents(homeEvents, awayEvents []game.Event, colWidth int) string {
 	// Calculate timeline column width (half of ticker width minus gap)
 	timelineWidth := (colWidth / 2) - 2
 
-	homeTimelineStyled := buildTimelineColumn(homeEvents, timelineWidth, lipgloss.Right)
-	awayTimelineStyled := buildTimelineColumn(awayEvents, timelineWidth, lipgloss.Left)
+	homeTimelineStyled := buildTimelineColumnFromEvents(homeEvents, timelineWidth, lipgloss.Right)
+	awayTimelineStyled := buildTimelineColumnFromEvents(awayEvents, timelineWidth, lipgloss.Left)
 
 	// Add gap between timelines and center the entire timeline
 	gap := "  "
@@ -122,24 +122,24 @@ func buildTimeline(homeEvents, awayEvents []game.PlayerEvent, colWidth int) stri
 }
 
 func (m MatchModel) View() string {
-	// Header
-
-	// Footer
+	// Footer - generate commentary on-demand from latest event
 	footer := ""
-	if !m.match.IsHalfTime() && len(m.match.Commentary) > 0 {
-		latestCommentaryMsg :=
-			m.match.Commentary[len(m.match.Commentary)-1]
-		style :=
-			lipgloss.NewStyle().Align(lipgloss.Center).Width(m.width)
+	if !m.match.IsHalfTime() && len(m.match.Events) > 0 {
+		latestEvent := m.match.Events[len(m.match.Events)-1]
+		commentary := game.GenerateCommentary(latestEvent, m.match)
 
-		if latestCommentaryMsg.Flash {
-			style =
-				style.Bold(true).Background(lipgloss.Color("#ff0000"))
+		style := lipgloss.NewStyle().Align(lipgloss.Center).Width(m.width)
+
+		// Use the commentary's For field to determine styling
+		if commentary.EventType == game.GoalEvent && commentary.For != nil {
+			style = style.Bold(true).
+				Background(lipgloss.Color(commentary.For.Club.Background)).
+				Foreground(lipgloss.Color(commentary.For.Club.Foreground))
 		} else {
 			style = style.Background(lipgloss.Color("#000000"))
 		}
 
-		footer = style.Render(latestCommentaryMsg.Message)
+		footer = style.Render(commentary.Message)
 	}
 
 	// Calculate column width
@@ -154,7 +154,7 @@ func (m MatchModel) View() string {
 		Padding(0, 1).
 		Render(timeStr)
 
-	// Build score widget and timeline using helper functions
+	// Build score widget using helper function
 	scoreWidget := buildScoreWidget(
 		m.match.Home.Club.Name,
 		m.match.Away.Club.Name,
@@ -162,7 +162,21 @@ func (m MatchModel) View() string {
 		m.match.Away.Score,
 		colWidth,
 	)
-	timeline := buildTimeline(m.match.Home.PlayerEvents, m.match.Away.PlayerEvents, colWidth)
+
+	// Filter events for each team's timeline (only show goal events)
+	var homeEvents []game.Event
+	var awayEvents []game.Event
+	for _, event := range m.match.Events {
+		if event.Type == game.GoalEvent {
+			if event.For == m.match.Home {
+				homeEvents = append(homeEvents, event)
+			} else if event.For == m.match.Away {
+				awayEvents = append(awayEvents, event)
+			}
+		}
+	}
+
+	timeline := buildTimelineFromEvents(homeEvents, awayEvents, colWidth)
 	gap := "  "
 
 	tickerContent := lipgloss.JoinVertical(
@@ -191,9 +205,12 @@ func (m MatchModel) View() string {
 		m.match.Away.GetLineup(),
 	)
 
-	// Calculate matchInfo height (total height - header - footer)
-	// Header and footer each take 1 line
-	matchInfoHeight := m.height - 2
+	// Calculate heights - footer takes 1 line, rest is for match info
+	footerHeight := 1
+	if footer == "" {
+		footerHeight = 0
+	}
+	matchInfoHeight := m.height - footerHeight
 	if matchInfoHeight < 0 {
 		matchInfoHeight = 0
 	}
@@ -206,5 +223,11 @@ func (m MatchModel) View() string {
 		lipgloss.Place(colWidth, matchInfoHeight, lipgloss.Center, lipgloss.Center, awayContent),
 	)
 
-	return lipgloss.JoinVertical(lipgloss.Top, matchInfo, footer)
+	// Place footer at the bottom of the screen
+	if footer != "" {
+		footerPlaced := lipgloss.Place(m.width, footerHeight, lipgloss.Center, lipgloss.Bottom, footer)
+		return lipgloss.JoinVertical(lipgloss.Top, matchInfo, footerPlaced)
+	}
+
+	return matchInfo
 }

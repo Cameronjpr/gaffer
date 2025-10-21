@@ -2,47 +2,70 @@ package game
 
 import "fmt"
 
-type CommentaryMessage struct {
-	Message string
-	Flash   bool
-	Event   EventType
+// CommentaryLine represents a line of commentary for display
+type CommentaryLine struct {
+	Message   string
+	For       *MatchParticipant
+	EventType EventType
 }
 
-func getCommentaryForEvent(event EventType, participant *MatchParticipant, match *Match) CommentaryMessage {
-	if match == nil {
-		return CommentaryMessage{Message: "Error reading match data", Flash: false}
+// GenerateCommentary creates commentary from an event with full match context
+func GenerateCommentary(event Event, match *Match) CommentaryLine {
+	if match == nil || event.For == nil {
+		return CommentaryLine{Message: "Error reading match data", EventType: event.Type}
 	}
 
-	msg := CommentaryMessage{Event: event}
+	line := CommentaryLine{
+		For:       event.For,
+		EventType: event.Type,
+	}
 
-	switch event {
+	switch event.Type {
 	case HalfStartsEvent:
 		switch match.CurrentHalf {
 		case 1:
-			msg.Message = "First half starts!"
+			line.Message = "First half starts!"
 		case 2:
-			msg.Message = "Second half starts!"
+			line.Message = "Second half starts!"
 		}
 	case HalfEndsEvent:
 		switch match.CurrentHalf {
 		case 1:
-			msg.Message = fmt.Sprintf("First half ends, with the score at %d-%d", match.Home.Score, match.Away.Score)
+			line.Message = fmt.Sprintf("First half ends, with the score at %d-%d", match.Home.Score, match.Away.Score)
 		case 2:
-			msg.Message = "Full time!"
+			line.Message = "Full time!"
 		}
-	case HomeGoalScoredEvent:
-		msg.Message = fmt.Sprintf("GOAL: %s score!", match.Home.Club.Name)
-	case AwayGoalScoredEvent:
-		msg.Message = fmt.Sprintf("GOAL: %s score!", match.Away.Club.Name)
+	case GoalEvent:
+		if event.Player != nil && event.Player.Player != nil {
+			line.Message = fmt.Sprintf("GOAL: %s scores for %s!", event.Player.Player.Name, event.For.Club.Name)
+		} else {
+			line.Message = fmt.Sprintf("GOAL: %s score!", event.For.Club.Name)
+		}
 	case PossessionChangedEvent:
-		msg.Message = fmt.Sprintf("%s win the ball", participant.Club.Name)
+		line.Message = fmt.Sprintf("%s win the ball", event.For.Club.Name)
 	case PossessionRetainedEvent:
-		msg.Message = fmt.Sprintf("%s have the ball...", participant.Club.Name)
-	case UnknownEvent:
-		msg.Message = fmt.Sprintf("Unknown event: %d", event)
+		line.Message = fmt.Sprintf("%s have the ball...", event.For.Club.Name)
+	case SaveEvent:
+		if event.Player != nil && event.Player.Player != nil {
+			line.Message = fmt.Sprintf("Save by %s!", event.Player.Player.Name)
+		} else {
+			line.Message = "Great save!"
+		}
+	case YellowCardEvent:
+		if event.Player != nil && event.Player.Player != nil {
+			line.Message = fmt.Sprintf("Yellow card for %s", event.Player.Player.Name)
+		} else {
+			line.Message = "Yellow card!"
+		}
+	case RedCardEvent:
+		if event.Player != nil && event.Player.Player != nil {
+			line.Message = fmt.Sprintf("RED CARD! %s is sent off!", event.Player.Player.Name)
+		} else {
+			line.Message = "RED CARD!"
+		}
 	default:
-		msg.Message = fmt.Sprintf("Unknown event: %d", event)
+		line.Message = fmt.Sprintf("Event: %d", event.Type)
 	}
 
-	return msg
+	return line
 }

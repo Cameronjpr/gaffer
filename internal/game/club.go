@@ -10,16 +10,19 @@ type Player struct {
 
 // Club represents a football club with permanent attributes
 type Club struct {
-	Name     string
-	Strength int // out of 20
-	Players  []Player
+	Name       string
+	Strength   int // out of 20
+	Background string
+	Foreground string
+	Players    []Player
 }
 
-// Clubs contains all Premier League clubs with realistic 2025/26 strength values
 var Clubs = []Club{
 	{
-		Name:     "Arsenal",
-		Strength: 20,
+		Name:       "Arsenal",
+		Strength:   20,
+		Background: "#DB0007",
+		Foreground: "#FFFFFF",
 		Players: []Player{
 			{Name: "Raya", Quality: 18},
 			{Name: "Timber", Quality: 17},
@@ -35,8 +38,10 @@ var Clubs = []Club{
 		},
 	},
 	{
-		Name:     "Manchester City",
-		Strength: 19,
+		Name:       "Manchester City",
+		Strength:   19,
+		Background: "#6CABDD",
+		Foreground: "#1C2C5B",
 		Players: []Player{
 			{Name: "Donnarumma", Quality: 18},
 			{Name: "Lewis", Quality: 15},

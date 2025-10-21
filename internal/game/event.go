@@ -2,61 +2,45 @@ package game
 
 import "fmt"
 
+// EventType represents the type of event that occurred in the match
 type EventType int
 
 const (
-	HalfStartsEvent EventType = iota
-	HalfEndsEvent
-	HomeGoalScoredEvent
-	AwayGoalScoredEvent
+	GoalEvent EventType = iota
+	SaveEvent
+	YellowCardEvent
+	RedCardEvent
+	InjuryEvent
+	CornerEvent
+	FreeKickEvent
 	PossessionChangedEvent
 	PossessionRetainedEvent
-	UnknownEvent
+	HalfStartsEvent
+	HalfEndsEvent
 )
 
-type PlayerEventType int
-
-const (
-	PlayerScoredEvent PlayerEventType = iota
-	PlayerInjuredEvent
-	PlayerYellowCardEvent
-	PlayerRedCardEvent
-	PlayerUnknownEvent
-)
-
-type PlayerEvent struct {
-	Type   PlayerEventType
-	Player Player
-	Minute int
-}
-
-type MatchEvent struct {
+// Event represents a key moment in the match
+type Event struct {
 	Type   EventType
-	Player Player
+	Minute int
+	For    *MatchParticipant            // Team the event benefits/involves
+	Player *MatchPlayerParticipant      // Optional: involved player
 }
 
-func NewPlayerEvent(t PlayerEventType, p Player, min int) PlayerEvent {
-	return PlayerEvent{
-		Type:   t,
-		Minute: min,
-		Player: p,
+// NewEvent creates a new event
+func NewEvent(eventType EventType, minute int, participant *MatchParticipant, player *MatchPlayerParticipant) Event {
+	return Event{
+		Type:   eventType,
+		Minute: minute,
+		For:    participant,
+		Player: player,
 	}
 }
 
-func (pe PlayerEvent) String() string {
-	switch pe.Type {
-	case PlayerScoredEvent:
-		return fmt.Sprintf("%s (%d')", pe.Player.Name, pe.Minute)
-	case PlayerUnknownEvent:
-		return fmt.Sprintf("%s did something", pe.Player.Name)
-	default:
-		return fmt.Sprintf("%s did something", pe.Player.Name)
+// String returns a string representation of the event for timeline display
+func (e Event) String() string {
+	if e.Player != nil && e.Player.Player != nil {
+		return fmt.Sprintf("%s (%d')", e.Player.Player.Name, e.Minute)
 	}
-}
-
-func NewMatchEvent(t EventType, p Player) MatchEvent {
-	return MatchEvent{
-		Type:   t,
-		Player: p,
-	}
+	return fmt.Sprintf("(%d')", e.Minute)
 }

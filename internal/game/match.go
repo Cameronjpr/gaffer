@@ -26,7 +26,6 @@ type MatchParticipant struct {
 	Formation     string
 	Score         int
 	HasPossession bool
-	PlayerEvents  []PlayerEvent
 }
 
 // NewMatchParticipant creates a new match participant from a club
@@ -124,17 +123,17 @@ type Match struct {
 	CurrentHalf  int
 	IsComplete   bool
 	PhaseHistory []PhaseResult
-	Commentary   []CommentaryMessage
+	Events       []Event
 }
 
 type PhaseResult struct {
-	Phase             int
-	HomeRoll          int
-	AwayRoll          int
-	HomePhaseStrength int
-	AwayPhaseStrength int
-	HomeGoals         int
-	AwayGoals         int
+	Phase          int
+	HomeRoll       int
+	AwayRoll       int
+	HomePhasePower int
+	AwayPhasePower int
+	HomeGoals      int
+	AwayGoals      int
 }
 
 func NewMatch(homeClub, awayClub *Club) Match {
@@ -144,48 +143,53 @@ func NewMatch(homeClub, awayClub *Club) Match {
 		CurrentPhase: 1,
 		CurrentHalf:  1,
 		PhaseHistory: make([]PhaseResult, 0),
-		Commentary:   make([]CommentaryMessage, 0),
+		Events:       make([]Event, 0),
 	}
+}
+
+// AddEvent adds an event to the match
+func (m *Match) AddEvent(event Event) {
+	m.Events = append(m.Events, event)
 }
 
 func (m *Match) PlayPhase() PhaseResult {
 	homeRoll := rand.IntN(100)
 	awayRoll := rand.IntN(100)
 
-	homePhaseStrength := m.Home.Club.Strength + homeRoll
-	awayPhaseStrength := m.Away.Club.Strength + awayRoll
+	homePhasePower := m.Home.Club.Strength + homeRoll
+	awayPhasePower := m.Away.Club.Strength + awayRoll
+	powerDiff := math.Abs(float64(homePhasePower - awayPhasePower))
 
-	powerDiff := math.Abs(float64(homePhaseStrength - awayPhaseStrength))
-	goalsThisPhase := 0
-
-	if homePhaseStrength > awayPhaseStrength {
+	if homePhasePower > awayPhasePower {
 		if m.Home.HasPossession {
-			m.Commentary = append(m.Commentary, getCommentaryForEvent(PossessionRetainedEvent, m.Home, m))
+			m.AddEvent(NewEvent(PossessionRetainedEvent, m.CurrentPhase, m.Home, nil))
 		} else {
 			m.Home.WinPossession()
 			m.Away.LosePossession()
-			m.Commentary = append(m.Commentary, getCommentaryForEvent(PossessionChangedEvent, m.Home, m))
+			m.AddEvent(NewEvent(PossessionChangedEvent, m.CurrentPhase, m.Home, nil))
 		}
-	} else if homePhaseStrength < awayPhaseStrength {
+	} else if homePhasePower < awayPhasePower {
 		if m.Away.HasPossession {
-			m.Commentary = append(m.Commentary, getCommentaryForEvent(PossessionRetainedEvent, m.Away, m))
+			m.AddEvent(NewEvent(PossessionRetainedEvent, m.CurrentPhase, m.Away, nil))
 		} else {
 			m.Away.WinPossession()
 			m.Home.LosePossession()
-			m.Commentary = append(m.Commentary, getCommentaryForEvent(PossessionChangedEvent, m.Away, m))
+			m.AddEvent(NewEvent(PossessionChangedEvent, m.CurrentPhase, m.Away, nil))
 		}
 	}
 
 	if powerDiff < goalscoringThreshold {
 		return PhaseResult{
-			HomeRoll:          homeRoll,
-			AwayRoll:          awayRoll,
-			HomePhaseStrength: homePhaseStrength,
-			AwayPhaseStrength: awayPhaseStrength,
-			HomeGoals:         0,
-			AwayGoals:         0,
+			HomeRoll:       homeRoll,
+			AwayRoll:       awayRoll,
+			HomePhasePower: homePhasePower,
+			AwayPhasePower: awayPhasePower,
+			HomeGoals:      0,
+			AwayGoals:      0,
 		}
 	}
+
+	goalsThisPhase := 0
 	if powerDiff > goalscoringThreshold {
 		goalsThisPhase = rand.IntN(2)
 	}
@@ -194,26 +198,26 @@ func (m *Match) PlayPhase() PhaseResult {
 	awayGoals := 0
 
 	if goalsThisPhase > 0 {
-		if homePhaseStrength > awayPhaseStrength {
+		if homePhasePower > awayPhasePower {
 			homeGoals = goalsThisPhase
-			m.Commentary = append(m.Commentary, getCommentaryForEvent(HomeGoalScoredEvent, m.Home, m))
-			m.Home.PlayerEvents = append(m.Home.PlayerEvents, NewPlayerEvent(PlayerScoredEvent, *m.Home.GetRandomOutfielder().Player, m.CurrentPhase))
+			scorer := m.Home.GetRandomOutfielder()
+			m.AddEvent(NewEvent(GoalEvent, m.CurrentPhase, m.Home, &scorer))
 		}
 
-		if homePhaseStrength < awayPhaseStrength {
+		if homePhasePower < awayPhasePower {
 			awayGoals = goalsThisPhase
-			m.Commentary = append(m.Commentary, getCommentaryForEvent(AwayGoalScoredEvent, m.Away, m))
-			m.Away.PlayerEvents = append(m.Away.PlayerEvents, NewPlayerEvent(PlayerScoredEvent, *m.Away.GetRandomOutfielder().Player, m.CurrentPhase))
+			scorer := m.Away.GetRandomOutfielder()
+			m.AddEvent(NewEvent(GoalEvent, m.CurrentPhase, m.Away, &scorer))
 		}
 	}
 
 	return PhaseResult{
-		HomeRoll:          homeRoll,
-		AwayRoll:          awayRoll,
-		HomePhaseStrength: homePhaseStrength,
-		AwayPhaseStrength: awayPhaseStrength,
-		HomeGoals:         homeGoals,
-		AwayGoals:         awayGoals,
+		HomeRoll:       homeRoll,
+		AwayRoll:       awayRoll,
+		HomePhasePower: homePhasePower,
+		AwayPhasePower: awayPhasePower,
+		HomeGoals:      homeGoals,
+		AwayGoals:      awayGoals,
 	}
 }
 

@@ -93,47 +93,56 @@ func TestBuildScoreWidget_Centering(t *testing.T) {
 	}
 }
 
-// TestBuildTimeline_Alignment tests timeline alignment and width
-func TestBuildTimeline_Alignment(t *testing.T) {
+// TestBuildTimelineFromEvents_Alignment tests timeline alignment and width with new Event system
+func TestBuildTimelineFromEvents_Alignment(t *testing.T) {
+	// Create dummy match participants for testing
+	homeClub := &game.Club{Name: "Home Team"}
+	awayClub := &game.Club{Name: "Away Team"}
+	homeParticipant := &game.MatchParticipant{Club: homeClub}
+	awayParticipant := &game.MatchParticipant{Club: awayClub}
+
+	player1 := &game.MatchPlayerParticipant{Player: &game.Player{Name: "Player1", Quality: 18}}
+	player2 := &game.MatchPlayerParticipant{Player: &game.Player{Name: "Player2", Quality: 19}}
+	player3 := &game.MatchPlayerParticipant{Player: &game.Player{Name: "Player3", Quality: 17}}
+
 	tests := []struct {
 		name       string
-		homeEvents []game.PlayerEvent
-		awayEvents []game.PlayerEvent
+		homeEvents []game.Event
+		awayEvents []game.Event
 		colWidth   int
 	}{
 		{
 			name: "balanced events",
-			homeEvents: []game.PlayerEvent{
-				{Type: game.PlayerScoredEvent, Player: game.Player{Name: "Player1", Quality: 18}, Minute: 10},
-				{Type: game.PlayerScoredEvent, Player: game.Player{Name: "Player2", Quality: 19}, Minute: 25},
+			homeEvents: []game.Event{
+				{Type: game.GoalEvent, Minute: 10, For: homeParticipant, Player: player1},
+				{Type: game.GoalEvent, Minute: 25, For: homeParticipant, Player: player2},
 			},
-			awayEvents: []game.PlayerEvent{
-				{Type: game.PlayerScoredEvent, Player: game.Player{Name: "Player3", Quality: 17}, Minute: 15},
-				{Type: game.PlayerScoredEvent, Player: game.Player{Name: "Player4", Quality: 18}, Minute: 30},
+			awayEvents: []game.Event{
+				{Type: game.GoalEvent, Minute: 15, For: awayParticipant, Player: player3},
 			},
 			colWidth: 60,
 		},
 		{
 			name: "unbalanced events - more home goals",
-			homeEvents: []game.PlayerEvent{
-				{Type: game.PlayerScoredEvent, Player: game.Player{Name: "Striker1", Quality: 20}, Minute: 5},
-				{Type: game.PlayerScoredEvent, Player: game.Player{Name: "Striker2", Quality: 19}, Minute: 15},
-				{Type: game.PlayerScoredEvent, Player: game.Player{Name: "Striker3", Quality: 18}, Minute: 45},
+			homeEvents: []game.Event{
+				{Type: game.GoalEvent, Minute: 5, For: homeParticipant, Player: player1},
+				{Type: game.GoalEvent, Minute: 15, For: homeParticipant, Player: player2},
+				{Type: game.GoalEvent, Minute: 45, For: homeParticipant, Player: player3},
 			},
-			awayEvents: []game.PlayerEvent{},
+			awayEvents: []game.Event{},
 			colWidth:   60,
 		},
 		{
 			name:       "no events",
-			homeEvents: []game.PlayerEvent{},
-			awayEvents: []game.PlayerEvent{},
+			homeEvents: []game.Event{},
+			awayEvents: []game.Event{},
 			colWidth:   60,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := buildTimeline(tt.homeEvents, tt.awayEvents, tt.colWidth)
+			result := buildTimelineFromEvents(tt.homeEvents, tt.awayEvents, tt.colWidth)
 
 			// Strip ANSI for analysis
 			plain := stripANSI(result)
@@ -161,11 +170,15 @@ func TestBuildTimeline_Alignment(t *testing.T) {
 	}
 }
 
-// TestBuildTimelineColumn_Width tests that timeline columns have fixed widths
-func TestBuildTimelineColumn_Width(t *testing.T) {
-	events := []game.PlayerEvent{
-		{Type: game.PlayerScoredEvent, Player: game.Player{Name: "PlayerA", Quality: 18}, Minute: 10},
-		{Type: game.PlayerScoredEvent, Player: game.Player{Name: "PlayerB", Quality: 19}, Minute: 20},
+// TestBuildTimelineColumnFromEvents_Width tests that timeline columns have fixed widths
+func TestBuildTimelineColumnFromEvents_Width(t *testing.T) {
+	participant := &game.MatchParticipant{Club: &game.Club{Name: "Test Team"}}
+	player1 := &game.MatchPlayerParticipant{Player: &game.Player{Name: "PlayerA", Quality: 18}}
+	player2 := &game.MatchPlayerParticipant{Player: &game.Player{Name: "PlayerB", Quality: 19}}
+
+	events := []game.Event{
+		{Type: game.GoalEvent, Minute: 10, For: participant, Player: player1},
+		{Type: game.GoalEvent, Minute: 20, For: participant, Player: player2},
 	}
 
 	widths := []int{20, 30, 40}
@@ -173,12 +186,12 @@ func TestBuildTimelineColumn_Width(t *testing.T) {
 	for _, width := range widths {
 		t.Run("width_"+string(rune(width+'0')), func(t *testing.T) {
 			// Test right-aligned
-			rightResult := buildTimelineColumn(events, width, lipgloss.Right)
+			rightResult := buildTimelineColumnFromEvents(events, width, lipgloss.Right)
 			rightPlain := stripANSI(rightResult)
 			rightLines := strings.Split(rightPlain, "\n")
 
 			// Test left-aligned
-			leftResult := buildTimelineColumn(events, width, lipgloss.Left)
+			leftResult := buildTimelineColumnFromEvents(events, width, lipgloss.Left)
 			leftPlain := stripANSI(leftResult)
 			leftLines := strings.Split(leftPlain, "\n")
 
@@ -203,15 +216,18 @@ func TestBuildTimelineColumn_Width(t *testing.T) {
 	}
 }
 
-// TestBuildTimelineColumn_Alignment tests that timeline columns align correctly
-func TestBuildTimelineColumn_Alignment(t *testing.T) {
-	events := []game.PlayerEvent{
-		{Type: game.PlayerScoredEvent, Player: game.Player{Name: "Test", Quality: 18}, Minute: 10},
+// TestBuildTimelineColumnFromEvents_Alignment tests that timeline columns align correctly
+func TestBuildTimelineColumnFromEvents_Alignment(t *testing.T) {
+	participant := &game.MatchParticipant{Club: &game.Club{Name: "Test Team"}}
+	player := &game.MatchPlayerParticipant{Player: &game.Player{Name: "Test", Quality: 18}}
+
+	events := []game.Event{
+		{Type: game.GoalEvent, Minute: 10, For: participant, Player: player},
 	}
 	width := 30
 
 	// Test right-aligned - text should be at the end
-	rightResult := buildTimelineColumn(events, width, lipgloss.Right)
+	rightResult := buildTimelineColumnFromEvents(events, width, lipgloss.Right)
 	rightPlain := stripANSI(rightResult)
 	rightLines := strings.Split(rightPlain, "\n")
 	if len(rightLines) > 0 {
@@ -224,7 +240,7 @@ func TestBuildTimelineColumn_Alignment(t *testing.T) {
 	}
 
 	// Test left-aligned - text should be at the start
-	leftResult := buildTimelineColumn(events, width, lipgloss.Left)
+	leftResult := buildTimelineColumnFromEvents(events, width, lipgloss.Left)
 	leftPlain := stripANSI(leftResult)
 	leftLines := strings.Split(leftPlain, "\n")
 	if len(leftLines) > 0 {
@@ -251,10 +267,12 @@ func TestColumnLayout(t *testing.T) {
 			scoreLines := strings.Split(scorePlain, "\n")
 
 			// Build a timeline
-			events := []game.PlayerEvent{
-				{Type: game.PlayerScoredEvent, Player: game.Player{Name: "Test", Quality: 18}, Minute: 10},
+			participant := &game.MatchParticipant{Club: &game.Club{Name: "Test Team"}}
+			player := &game.MatchPlayerParticipant{Player: &game.Player{Name: "Test", Quality: 18}}
+			events := []game.Event{
+				{Type: game.GoalEvent, Minute: 10, For: participant, Player: player},
 			}
-			timeline := buildTimeline(events, []game.PlayerEvent{}, colWidth)
+			timeline := buildTimelineFromEvents(events, []game.Event{}, colWidth)
 			timelinePlain := stripANSI(timeline)
 			timelineLines := strings.Split(timelinePlain, "\n")
 
