@@ -9,7 +9,7 @@ var (
 	phases = 90
 )
 
-const goalscoringThreshold = 75
+const goalscoringThreshold = 80
 
 type Half int
 
@@ -58,7 +58,6 @@ func (m *Match) StartSecondHalf() {
 	m.CurrentMinute = 46
 }
 
-// AddEvent adds an event to the match
 func (m *Match) AddEvent(event Event) {
 	m.Events = append(m.Events, event)
 }
@@ -66,7 +65,10 @@ func (m *Match) AddEvent(event Event) {
 func (m *Match) GetAddedTime(half Half) int {
 	addedTime := 0
 	for _, event := range m.Events {
-		if event.Minute > 45 && half == SecondHalf {
+		if half == FirstHalf && event.Minute > 45 {
+			continue
+		}
+		if half == SecondHalf && event.Minute <= 45 && event.Minute > 90 {
 			continue
 		}
 
@@ -80,6 +82,14 @@ func (m *Match) GetAddedTime(half Half) int {
 func (m *Match) IsInAddedTime() bool {
 	return (m.CurrentMinute > 45 && m.CurrentMinute <= 45+m.GetAddedTime(FirstHalf)) ||
 		(m.CurrentMinute > 90 && m.CurrentMinute <= 90+m.GetAddedTime(SecondHalf))
+}
+
+func (m Match) IsHalfTime() bool {
+	return m.CurrentHalf == FirstHalf && m.CurrentMinute > 45+m.GetAddedTime(FirstHalf)
+}
+
+func (m Match) IsFullTime() bool {
+	return m.CurrentMinute >= 90+m.GetAddedTime(SecondHalf)
 }
 
 func (m *Match) PlayPhase() PhaseResult {
@@ -149,12 +159,4 @@ func (m *Match) PlayPhase() PhaseResult {
 		HomeGoals:      homeGoals,
 		AwayGoals:      awayGoals,
 	}
-}
-
-func (m Match) IsHalfTime() bool {
-	return m.CurrentMinute == 45+m.GetAddedTime(FirstHalf)
-}
-
-func (m Match) IsFullTime() bool {
-	return m.CurrentMinute == 90+m.GetAddedTime(SecondHalf)
 }

@@ -38,11 +38,14 @@ func (m MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 
+			if m.match.IsHalfTime() {
+				m.match.StartSecondHalf()
+			}
 			return m, tick()
 		}
 	case tickMsg:
 		// Check if match is complete
-		if m.match.CurrentMinute >= 90 {
+		if m.match.IsFullTime() {
 			return m, nil
 		}
 
@@ -61,7 +64,7 @@ func (m MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.match.PhaseHistory = append(m.match.PhaseHistory, result)
 
 		if m.match.IsHalfTime() {
-			m.match.StartSecondHalf()
+			m.isPaused = true
 			return m, nil
 		}
 
@@ -151,9 +154,9 @@ func (m MatchModel) View() string {
 		timeStr = "HT"
 	} else if m.match.IsFullTime() {
 		timeStr = "FT"
-	} else if m.match.CurrentHalf == 1 && m.match.IsInAddedTime() {
+	} else if m.match.CurrentHalf == game.FirstHalf && m.match.IsInAddedTime() {
 		timeStr += fmt.Sprintf("+%v'", m.match.GetAddedTime(game.FirstHalf))
-	} else if m.match.CurrentHalf == 2 && m.match.IsInAddedTime() {
+	} else if m.match.CurrentHalf == game.SecondHalf && m.match.IsInAddedTime() {
 		timeStr += fmt.Sprintf("+%v'", m.match.GetAddedTime(game.SecondHalf))
 	}
 	time := lipgloss.NewStyle().
@@ -213,9 +216,6 @@ func (m MatchModel) View() string {
 
 	// Calculate heights - footer takes 1 line, rest is for match info
 	footerHeight := 1
-	if footer == "" {
-		footerHeight = 0
-	}
 	matchInfoHeight := m.height - footerHeight
 	if matchInfoHeight < 0 {
 		matchInfoHeight = 0
