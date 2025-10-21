@@ -112,7 +112,7 @@ func (m Model) View() string {
 		Align(lipgloss.Right).
 		Width(24).
 		Background(lipgloss.Color("#0000ff")).
-		Render(fmt.Sprintf("Home %d - %d Away", m.match.Home.Score, m.match.Away.Score))
+		Render(fmt.Sprintf("%v [%v] – [%v] %v", m.match.Home.Name, m.match.Home.Score, m.match.Away.Score, m.match.Away.Name))
 
 	header := lipgloss.JoinHorizontal(lipgloss.Left, time, score)
 
@@ -123,6 +123,7 @@ func (m Model) View() string {
 		if latestCommentaryMsg.Flash {
 			footer = lipgloss.NewStyle().
 				Align(lipgloss.Center).
+				Bold(true).
 				Width(m.width).
 				Background(lipgloss.Color("#ff0000")).
 				Render(latestCommentaryMsg.Message)
@@ -130,6 +131,7 @@ func (m Model) View() string {
 			footer = lipgloss.NewStyle().
 				Align(lipgloss.Center).
 				Width(m.width).
+				Background(lipgloss.Color("000000")).
 				Render(latestCommentaryMsg.Message)
 		}
 	}

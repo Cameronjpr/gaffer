@@ -11,12 +11,6 @@ var (
 	phases = 90
 )
 
-type Team struct {
-	Name     string
-	Strength int
-	Score    int
-}
-
 type Match struct {
 	Home         Team
 	Away         Team
@@ -43,18 +37,10 @@ type PhaseResult struct {
 	AwayGoals         int
 }
 
-func createTeam(name string) Team {
-	return Team{
-		Name:     name,
-		Strength: rand.IntN(20),
-		Score:    0,
-	}
-}
-
 func NewMatch() Match {
 	return Match{
-		Home:         createTeam("Home"),
-		Away:         createTeam("Away"),
+		Home:         createTeam("Leeds"),
+		Away:         createTeam("Arsenal"),
 		CurrentPhase: 1,
 		CurrentHalf:  1,
 		IsComplete:   false,
@@ -73,6 +59,13 @@ func PlayMatch() {
 		return
 	}
 	defer file.Close()
+
+	coinToss := rand.IntN(2) == 0
+	if coinToss {
+		m.Home.HasPossession = true
+	} else {
+		m.Away.HasPossession = true
+	}
 
 	for m.CurrentPhase <= 45 {
 		m.PlayPhase()
@@ -100,8 +93,27 @@ func (m *Match) PlayPhase() PhaseResult {
 	powerDiff := math.Abs(float64(homePhaseStrength - awayPhaseStrength))
 	goalsThisPhase := 0
 
+	if homePhaseStrength > awayPhaseStrength {
+
+		if m.Home.HasPossession {
+			m.Commentary = append(m.Commentary, CommentaryMessage{Message: fmt.Sprintf("%v are keeping the ball", m.Home.Name), Flash: false})
+		} else {
+			m.Home.WinPossession()
+			m.Away.LosePossession()
+			m.Commentary = append(m.Commentary, CommentaryMessage{Message: fmt.Sprintf("%v takes the ball!", m.Home.Name), Flash: false})
+		}
+
+	} else if homePhaseStrength < awayPhaseStrength {
+		if m.Away.HasPossession {
+			m.Commentary = append(m.Commentary, CommentaryMessage{Message: fmt.Sprintf("%v are keeping the ball", m.Away.Name), Flash: false})
+		} else {
+			m.Away.WinPossession()
+			m.Home.LosePossession()
+			m.Commentary = append(m.Commentary, CommentaryMessage{Message: fmt.Sprintf("%v takes the ball!", m.Away.Name), Flash: false})
+		}
+	}
+
 	if powerDiff < 80 {
-		m.Commentary = append(m.Commentary, CommentaryMessage{Message: "...", Flash: false})
 		return PhaseResult{
 			HomeRoll:          homeRoll,
 			AwayRoll:          awayRoll,
@@ -121,12 +133,12 @@ func (m *Match) PlayPhase() PhaseResult {
 	if goalsThisPhase > 0 {
 		if homePhaseStrength > awayPhaseStrength {
 			homeGoals = goalsThisPhase
-			m.Commentary = append(m.Commentary, CommentaryMessage{Message: "Home team scores!", Flash: true})
+			m.Commentary = append(m.Commentary, CommentaryMessage{Message: fmt.Sprintf("GOAL! %v score!", m.Home.Name), Flash: true})
 		}
 
 		if homePhaseStrength < awayPhaseStrength {
 			awayGoals = goalsThisPhase
-			m.Commentary = append(m.Commentary, CommentaryMessage{Message: "Away team scores!", Flash: true})
+			m.Commentary = append(m.Commentary, CommentaryMessage{Message: fmt.Sprintf("GOAL! %v score!", m.Away.Name), Flash: true})
 		}
 	}
 
@@ -148,6 +160,6 @@ func writeMatchLog(match Match) {
 	}
 	defer file.Close()
 
-	fmt.Fprintf(file, "Home [%v] – [%v] Away\n", match.Home.Score, match.Away.Score)
+	fmt.Fprintf(file, "%v [%v] – [%v] %v\n", match.Home.Name, match.Home.Score, match.Away.Score, match.Away.Name)
 	fmt.Fprintf(file, "Phase %v\n", match.CurrentPhase)
 }
