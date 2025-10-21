@@ -42,8 +42,7 @@ func (m MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case tickMsg:
 		// Check if match is complete
-		if m.match.CurrentPhase >= 90 {
-			m.match.IsComplete = true
+		if m.match.CurrentMinute >= 90 {
 			return m, nil
 		}
 
@@ -58,12 +57,11 @@ func (m MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Update match state
 		m.match.Home.Score += result.HomeGoals
 		m.match.Away.Score += result.AwayGoals
-		m.match.CurrentPhase++
+		m.match.CurrentMinute++
 		m.match.PhaseHistory = append(m.match.PhaseHistory, result)
 
 		if m.match.IsHalfTime() {
-			m.isPaused = true
-			m.match.CurrentHalf++
+			m.match.StartSecondHalf()
 			return m, nil
 		}
 
@@ -72,6 +70,10 @@ func (m MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// If a goal was scored, pause longer to let user see it
 		if goalScored {
+			return m, tickWithDuration(time.Second * 3)
+		}
+
+		if m.match.IsInAddedTime() {
 			return m, tickWithDuration(time.Second * 2)
 		}
 
@@ -144,11 +146,15 @@ func (m MatchModel) View() string {
 
 	// Calculate column width
 	colWidth := m.width / 3
-	timeStr := fmt.Sprintf("(%v:00)", m.match.CurrentPhase)
-	if m.match.CurrentPhase == 45 {
+	timeStr := fmt.Sprintf("(%v:00)", m.match.CurrentMinute)
+	if m.match.IsHalfTime() {
 		timeStr = "HT"
-	} else if m.match.CurrentPhase == 90 {
+	} else if m.match.IsFullTime() {
 		timeStr = "FT"
+	} else if m.match.CurrentHalf == 1 && m.match.IsInAddedTime() {
+		timeStr += fmt.Sprintf("+%v'", m.match.GetAddedTime(game.FirstHalf))
+	} else if m.match.CurrentHalf == 2 && m.match.IsInAddedTime() {
+		timeStr += fmt.Sprintf("+%v'", m.match.GetAddedTime(game.SecondHalf))
 	}
 	time := lipgloss.NewStyle().
 		Padding(0, 1).

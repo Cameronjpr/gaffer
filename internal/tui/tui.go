@@ -57,7 +57,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.match = newMatch.(MatchModel)
 
 		// Check if match is complete
-		if m.match.match.IsComplete {
+		if m.match.match.IsFullTime() {
 			// m.mode = ResultsMode
 		}
 
