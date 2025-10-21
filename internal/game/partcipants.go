@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"math/rand/v2"
+	"strings"
 )
 
 // MatchPlayerParticipant represents a player participating in a specific match
@@ -74,20 +75,56 @@ func (p *MatchParticipant) GetRandomOutfielder() MatchPlayerParticipant {
 	return outfielders[rand.IntN(len(outfielders))]
 }
 
-func (p *MatchParticipant) GetLineup() string {
+func (p *MatchParticipant) GetLineup(match *Match) string {
 	lineup := ""
 	stars := p.GetStarPlayers()
+
+	// Calculate max player name length for consistent formatting
+	maxNameLen := 0
+	for _, player := range p.Players {
+		if len(player.Player.Name) > maxNameLen {
+			maxNameLen = len(player.Player.Name)
+		}
+	}
+
 	for _, matchPlayer := range p.Players {
-		suffix := ""
+		// Star indicator with brackets
+		starIndicator := "   " // 3 spaces
 		for _, star := range stars {
 			if star.Player.Name == matchPlayer.Player.Name {
-				suffix += " ★"
+				starIndicator = "[★]"
+				break
 			}
 		}
 
-		row := fmt.Sprintf("%s - %s%s\n", matchPlayer.Position, matchPlayer.Player.Name, suffix)
-		lineup += row
+		// Count goals for this player
+		goalCount := 0
+		if match != nil {
+			for _, event := range match.Events {
+				if event.Type == GoalEvent &&
+				   event.For == p &&
+				   event.Player != nil &&
+				   event.Player.Player != nil &&
+				   event.Player.Player.Name == matchPlayer.Player.Name {
+					goalCount++
+				}
+			}
+		}
 
+		// Build goal indicator string
+		goalIndicator := ""
+		if goalCount > 0 {
+			goalIndicator = " " + strings.Repeat("●", goalCount)
+		}
+
+		// Fixed-width formatting: position (2 chars) - name (padded) star (3 chars) goals
+		row := fmt.Sprintf("%-2s - %-*s %s%s\n",
+			matchPlayer.Position,
+			maxNameLen,
+			matchPlayer.Player.Name,
+			starIndicator,
+			goalIndicator)
+		lineup += row
 	}
 	return lineup
 }

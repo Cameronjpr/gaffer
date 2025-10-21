@@ -53,7 +53,7 @@ func (m PreMatchModel) View() string {
 		lipgloss.NewStyle().Bold(true).Render(m.match.Home.Club.Name),
 		lipgloss.NewStyle().Italic(true).Render(m.match.Home.Formation),
 		"",
-		m.match.Home.GetLineup(),
+		m.match.Home.GetLineup(nil),
 	)
 
 	// Match info section
@@ -65,7 +65,7 @@ func (m PreMatchModel) View() string {
 		lipgloss.NewStyle().Bold(true).Render(m.match.Away.Club.Name),
 		lipgloss.NewStyle().Italic(true).Render(m.match.Away.Formation),
 		"",
-		m.match.Away.GetLineup(),
+		m.match.Away.GetLineup(nil),
 	)
 
 	// Create 3-column layout

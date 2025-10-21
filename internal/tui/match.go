@@ -129,7 +129,7 @@ func buildTimelineFromEvents(homeEvents, awayEvents []game.Event, colWidth int) 
 func (m MatchModel) View() string {
 	// Footer - generate commentary on-demand from latest event
 	footer := ""
-	if !m.match.IsHalfTime() && len(m.match.Events) > 0 {
+	if !m.match.IsHalfTime() && !m.match.IsFullTime() && len(m.match.Events) > 0 {
 		latestEvent := m.match.Events[len(m.match.Events)-1]
 		commentary := game.GenerateCommentary(latestEvent, m.match)
 
@@ -202,7 +202,7 @@ func (m MatchModel) View() string {
 		lipgloss.NewStyle().Bold(true).Render(m.match.Home.Club.Name),
 		lipgloss.NewStyle().Italic(true).Render(m.match.Home.Formation),
 		"",
-		m.match.Home.GetLineup(),
+		m.match.Home.GetLineup(m.match),
 	)
 
 	// Away team section
@@ -211,7 +211,7 @@ func (m MatchModel) View() string {
 		lipgloss.NewStyle().Bold(true).Render(m.match.Away.Club.Name),
 		lipgloss.NewStyle().Italic(true).Render(m.match.Away.Formation),
 		"",
-		m.match.Away.GetLineup(),
+		m.match.Away.GetLineup(m.match),
 	)
 
 	// Calculate heights - footer takes 1 line, rest is for match info
