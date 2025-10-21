@@ -55,7 +55,7 @@ func (m *Match) StartFirstHalf() {
 
 func (m *Match) StartSecondHalf() {
 	m.CurrentHalf = SecondHalf
-	m.CurrentMinute = 46
+	m.CurrentMinute = 45 // Will be incremented to 46 on first tick
 }
 
 func (m *Match) AddEvent(event Event) {
@@ -90,6 +90,26 @@ func (m Match) IsHalfTime() bool {
 
 func (m Match) IsFullTime() bool {
 	return m.CurrentMinute >= 90+m.GetAddedTime(SecondHalf)
+}
+
+func (m *Match) GetMaxPlayerNameLength() int {
+	maxNameLen := 0
+
+	// Check home team
+	for _, player := range m.Home.Players {
+		if len(player.Player.Name) > maxNameLen {
+			maxNameLen = len(player.Player.Name)
+		}
+	}
+
+	// Check away team
+	for _, player := range m.Away.Players {
+		if len(player.Player.Name) > maxNameLen {
+			maxNameLen = len(player.Player.Name)
+		}
+	}
+
+	return maxNameLen
 }
 
 func (m *Match) PlayPhase() PhaseResult {

@@ -80,10 +80,16 @@ func (p *MatchParticipant) GetLineup(match *Match) string {
 	stars := p.GetStarPlayers()
 
 	// Calculate max player name length for consistent formatting
+	// If we have a match, use global max across both teams to prevent layout shift
 	maxNameLen := 0
-	for _, player := range p.Players {
-		if len(player.Player.Name) > maxNameLen {
-			maxNameLen = len(player.Player.Name)
+	if match != nil {
+		maxNameLen = match.GetMaxPlayerNameLength()
+	} else {
+		// Pre-match: calculate for this team only
+		for _, player := range p.Players {
+			if len(player.Player.Name) > maxNameLen {
+				maxNameLen = len(player.Player.Name)
+			}
 		}
 	}
 
