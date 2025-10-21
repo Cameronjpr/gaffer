@@ -28,7 +28,7 @@ func NewModel(match *game.Match) Model {
 }
 
 func tick() tea.Cmd {
-	return tickWithDuration(time.Millisecond * 50)
+	return tickWithDuration(time.Millisecond * 100)
 }
 
 func tickWithDuration(d time.Duration) tea.Cmd {

@@ -86,7 +86,6 @@ func PlayMatch() {
 		m.CurrentPhase++
 	}
 
-	// After TUI exits, write match log
 	writeMatchLog(m)
 
 }

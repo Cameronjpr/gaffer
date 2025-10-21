@@ -20,9 +20,6 @@ func main() {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
-
-	// writeMatchLog(finalModel.match)
-	// After TUI exits, write match log
 }
 
 func runCmd(name string, arg ...string) {
@@ -43,20 +40,3 @@ func ClearTerminal() {
 		runCmd("clear")
 	}
 }
-
-/*
- * Pitch (zones)
- * Phases of play
- *
- *
- *
- * |---|---|---|
- * |   |   |   |
- * |---|---|---|
- * |   |   |   |
- * |---|---|---|
- * |   |   |   |
- * |---|---|---|
- * |   |   |   |
- * |---|---|---|
- */
