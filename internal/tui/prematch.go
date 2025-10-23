@@ -3,18 +3,18 @@ package tui
 import (
 	"fmt"
 
-	"github.com/cameronjpr/gaffer/internal/game"
+	"github.com/cameronjpr/gaffer/internal/domain"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type PreMatchModel struct {
-	match  *game.Match
+	match  *domain.Match
 	width  int
 	height int
 }
 
-func NewPreMatchModel(match game.Match) PreMatchModel {
+func NewPreMatchModel(match domain.Match) PreMatchModel {
 	return PreMatchModel{
 		match: &match,
 	}

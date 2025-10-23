@@ -1,7 +1,7 @@
 package tui
 
 import (
-	"github.com/cameronjpr/gaffer/internal/game"
+	"github.com/cameronjpr/gaffer/internal/domain"
 	"github.com/charmbracelet/bubbles/list"
 )
 
@@ -24,9 +24,9 @@ type AppModel struct {
 
 func NewModel() AppModel {
 	// For now, hardcode Leeds vs Arsenal until manager mode is implemented
-	homeClub := game.GetClubByName("Manchester City")
-	awayClub := game.GetClubByName("Arsenal")
-	match := game.NewMatch(homeClub, awayClub)
+	homeClub := domain.GetClubByName("Manchester City")
+	awayClub := domain.GetClubByName("Arsenal")
+	match := domain.NewMatch(homeClub, awayClub)
 
 	return AppModel{
 		mode: MenuMode,

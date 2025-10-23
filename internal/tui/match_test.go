@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cameronjpr/gaffer/internal/game"
+	"github.com/cameronjpr/gaffer/internal/domain"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -96,46 +96,46 @@ func TestBuildScoreWidget_Centering(t *testing.T) {
 // TestBuildTimelineFromEvents_Alignment tests timeline alignment and width with new Event system
 func TestBuildTimelineFromEvents_Alignment(t *testing.T) {
 	// Create dummy match participants for testing
-	homeClub := &game.Club{Name: "Home Team"}
-	awayClub := &game.Club{Name: "Away Team"}
-	homeParticipant := &game.MatchParticipant{Club: homeClub}
-	awayParticipant := &game.MatchParticipant{Club: awayClub}
+	homeClub := &domain.Club{Name: "Home Team"}
+	awayClub := &domain.Club{Name: "Away Team"}
+	homeParticipant := &domain.MatchParticipant{Club: homeClub}
+	awayParticipant := &domain.MatchParticipant{Club: awayClub}
 
-	player1 := &game.MatchPlayerParticipant{Player: &game.Player{Name: "Player1", Quality: 18}}
-	player2 := &game.MatchPlayerParticipant{Player: &game.Player{Name: "Player2", Quality: 19}}
-	player3 := &game.MatchPlayerParticipant{Player: &game.Player{Name: "Player3", Quality: 17}}
+	player1 := &domain.MatchPlayerParticipant{Player: &domain.Player{Name: "Player1", Quality: 18}}
+	player2 := &domain.MatchPlayerParticipant{Player: &domain.Player{Name: "Player2", Quality: 19}}
+	player3 := &domain.MatchPlayerParticipant{Player: &domain.Player{Name: "Player3", Quality: 17}}
 
 	tests := []struct {
 		name       string
-		homeEvents []game.Event
-		awayEvents []game.Event
+		homeEvents []domain.Event
+		awayEvents []domain.Event
 		colWidth   int
 	}{
 		{
 			name: "balanced events",
-			homeEvents: []game.Event{
-				{Type: game.GoalEvent, Minute: 10, For: homeParticipant, Player: player1},
-				{Type: game.GoalEvent, Minute: 25, For: homeParticipant, Player: player2},
+			homeEvents: []domain.Event{
+				{Type: domain.GoalEvent, Minute: 10, For: homeParticipant, Player: player1},
+				{Type: domain.GoalEvent, Minute: 25, For: homeParticipant, Player: player2},
 			},
-			awayEvents: []game.Event{
-				{Type: game.GoalEvent, Minute: 15, For: awayParticipant, Player: player3},
+			awayEvents: []domain.Event{
+				{Type: domain.GoalEvent, Minute: 15, For: awayParticipant, Player: player3},
 			},
 			colWidth: 60,
 		},
 		{
 			name: "unbalanced events - more home goals",
-			homeEvents: []game.Event{
-				{Type: game.GoalEvent, Minute: 5, For: homeParticipant, Player: player1},
-				{Type: game.GoalEvent, Minute: 15, For: homeParticipant, Player: player2},
-				{Type: game.GoalEvent, Minute: 45, For: homeParticipant, Player: player3},
+			homeEvents: []domain.Event{
+				{Type: domain.GoalEvent, Minute: 5, For: homeParticipant, Player: player1},
+				{Type: domain.GoalEvent, Minute: 15, For: homeParticipant, Player: player2},
+				{Type: domain.GoalEvent, Minute: 45, For: homeParticipant, Player: player3},
 			},
-			awayEvents: []game.Event{},
+			awayEvents: []domain.Event{},
 			colWidth:   60,
 		},
 		{
 			name:       "no events",
-			homeEvents: []game.Event{},
-			awayEvents: []game.Event{},
+			homeEvents: []domain.Event{},
+			awayEvents: []domain.Event{},
 			colWidth:   60,
 		},
 	}
@@ -172,13 +172,13 @@ func TestBuildTimelineFromEvents_Alignment(t *testing.T) {
 
 // TestBuildTimelineColumnFromEvents_Width tests that timeline columns have fixed widths
 func TestBuildTimelineColumnFromEvents_Width(t *testing.T) {
-	participant := &game.MatchParticipant{Club: &game.Club{Name: "Test Team"}}
-	player1 := &game.MatchPlayerParticipant{Player: &game.Player{Name: "PlayerA", Quality: 18}}
-	player2 := &game.MatchPlayerParticipant{Player: &game.Player{Name: "PlayerB", Quality: 19}}
+	participant := &domain.MatchParticipant{Club: &domain.Club{Name: "Test Team"}}
+	player1 := &domain.MatchPlayerParticipant{Player: &domain.Player{Name: "PlayerA", Quality: 18}}
+	player2 := &domain.MatchPlayerParticipant{Player: &domain.Player{Name: "PlayerB", Quality: 19}}
 
-	events := []game.Event{
-		{Type: game.GoalEvent, Minute: 10, For: participant, Player: player1},
-		{Type: game.GoalEvent, Minute: 20, For: participant, Player: player2},
+	events := []domain.Event{
+		{Type: domain.GoalEvent, Minute: 10, For: participant, Player: player1},
+		{Type: domain.GoalEvent, Minute: 20, For: participant, Player: player2},
 	}
 
 	widths := []int{20, 30, 40}
@@ -218,11 +218,11 @@ func TestBuildTimelineColumnFromEvents_Width(t *testing.T) {
 
 // TestBuildTimelineColumnFromEvents_Alignment tests that timeline columns align correctly
 func TestBuildTimelineColumnFromEvents_Alignment(t *testing.T) {
-	participant := &game.MatchParticipant{Club: &game.Club{Name: "Test Team"}}
-	player := &game.MatchPlayerParticipant{Player: &game.Player{Name: "Test", Quality: 18}}
+	participant := &domain.MatchParticipant{Club: &domain.Club{Name: "Test Team"}}
+	player := &domain.MatchPlayerParticipant{Player: &domain.Player{Name: "Test", Quality: 18}}
 
-	events := []game.Event{
-		{Type: game.GoalEvent, Minute: 10, For: participant, Player: player},
+	events := []domain.Event{
+		{Type: domain.GoalEvent, Minute: 10, For: participant, Player: player},
 	}
 	width := 30
 
@@ -267,12 +267,12 @@ func TestColumnLayout(t *testing.T) {
 			scoreLines := strings.Split(scorePlain, "\n")
 
 			// Build a timeline
-			participant := &game.MatchParticipant{Club: &game.Club{Name: "Test Team"}}
-			player := &game.MatchPlayerParticipant{Player: &game.Player{Name: "Test", Quality: 18}}
-			events := []game.Event{
-				{Type: game.GoalEvent, Minute: 10, For: participant, Player: player},
+			participant := &domain.MatchParticipant{Club: &domain.Club{Name: "Test Team"}}
+			player := &domain.MatchPlayerParticipant{Player: &domain.Player{Name: "Test", Quality: 18}}
+			events := []domain.Event{
+				{Type: domain.GoalEvent, Minute: 10, For: participant, Player: player},
 			}
-			timeline := buildTimelineFromEvents(events, []game.Event{}, colWidth)
+			timeline := buildTimelineFromEvents(events, []domain.Event{}, colWidth)
 			timelinePlain := stripANSI(timeline)
 			timelineLines := strings.Split(timelinePlain, "\n")
 
@@ -305,14 +305,14 @@ func TestColumnLayout(t *testing.T) {
 // TestZoneIndicator verifies the 3x3 grid renders correctly
 func TestZoneIndicator(t *testing.T) {
 	tests := []struct {
-		name         string
-		zone         game.PitchZone
-		expectedDot  [2]int // [row, col] where ● should appear
+		name        string
+		zone        domain.PitchZone
+		expectedDot [2]int // [row, col] where ● should appear
 	}{
-		{"Attacking Centre", game.AttCentre, [2]int{0, 1}},   // top middle
-		{"Midfield Left", game.MidLeft, [2]int{1, 0}},        // middle left
-		{"Defensive Right", game.DefRight, [2]int{2, 2}},     // bottom right
-		{"Midfield Centre", game.MidCentre, [2]int{1, 1}},    // center
+		{"Attacking Centre", domain.AttCentre, [2]int{0, 1}}, // top middle
+		{"Midfield Left", domain.MidLeft, [2]int{1, 0}},      // middle left
+		{"Defensive Right", domain.DefRight, [2]int{2, 2}},   // bottom right
+		{"Midfield Centre", domain.MidCentre, [2]int{1, 1}},  // center
 	}
 
 	for _, tt := range tests {

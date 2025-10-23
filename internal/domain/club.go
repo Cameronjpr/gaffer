@@ -1,12 +1,6 @@
-package game
+package domain
 
 import "fmt"
-
-// Player represents an individual player with permanent attributes
-type Player struct {
-	Name    string
-	Quality int // out of 20
-}
 
 // Club represents a football club with permanent attributes
 type Club struct {

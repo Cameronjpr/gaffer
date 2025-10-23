@@ -1,4 +1,4 @@
-package game
+package domain
 
 type PitchZone int
 

@@ -1,4 +1,4 @@
-package game
+package domain
 
 import (
 	"fmt"
@@ -131,12 +131,4 @@ func (p *MatchParticipant) GetLineup(match *Match) string {
 		lineup += row
 	}
 	return lineup
-}
-
-func (p *MatchParticipant) AddPlayer(matchPlayer MatchPlayerParticipant) {
-	p.Players = append(p.Players, matchPlayer)
-}
-
-func (p *MatchParticipant) IncreaseScore() {
-	p.Score++
 }

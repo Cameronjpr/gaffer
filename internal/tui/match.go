@@ -4,21 +4,24 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cameronjpr/gaffer/internal/game"
+	"github.com/cameronjpr/gaffer/internal/domain"
+	"github.com/cameronjpr/gaffer/internal/simulation"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type MatchModel struct {
-	match    *game.Match
+	match    *domain.Match
+	engine   *simulation.Engine
 	isPaused bool
 	width    int
 	height   int
 }
 
-func NewMatchModel(match game.Match) MatchModel {
+func NewMatchModel(match domain.Match) MatchModel {
 	return MatchModel{
 		match:    &match,
+		engine:   simulation.NewEngine(&match),
 		isPaused: false,
 	}
 }
@@ -55,7 +58,7 @@ func (m MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		// Auto-advance to next phase
-		result := m.match.PlayPhase()
+		result := m.engine.PlayPhase()
 
 		// Update match state
 		m.match.Home.Score += result.HomeGoals
@@ -97,7 +100,7 @@ func buildScoreWidget(homeTeam, awayTeam string, homeScore, awayScore, width int
 }
 
 // buildTimelineColumnFromEvents builds a single timeline column with events
-func buildTimelineColumnFromEvents(events []game.Event, width int, align lipgloss.Position) string {
+func buildTimelineColumnFromEvents(events []domain.Event, width int, align lipgloss.Position) string {
 	timeline := ""
 	for _, event := range events {
 		timeline += event.String()
@@ -110,19 +113,19 @@ func buildTimelineColumnFromEvents(events []game.Event, width int, align lipglos
 }
 
 // buildZoneIndicator creates a simple 3x3 grid showing current active zone
-func buildZoneIndicator(zone game.PitchZone, teamInPossession *game.MatchParticipant) string {
+func buildZoneIndicator(zone domain.PitchZone, teamInPossession *domain.MatchParticipant) string {
 	// Map zones to grid positions (inverted Y so attacking is on top)
 	// Row 0 (top) = Attacking third, Row 2 (bottom) = Defensive third
-	zoneMap := map[game.PitchZone][2]int{
-		game.AttLeft:   {0, 0}, // top-left
-		game.AttCentre: {0, 1}, // top-center
-		game.AttRight:  {0, 2}, // top-right
-		game.MidLeft:   {1, 0},
-		game.MidCentre: {1, 1},
-		game.MidRight:  {1, 2},
-		game.DefLeft:   {2, 0}, // bottom-left
-		game.DefCentre: {2, 1},
-		game.DefRight:  {2, 2}, // bottom-right
+	zoneMap := map[domain.PitchZone][2]int{
+		domain.AttLeft:   {0, 0}, // top-left
+		domain.AttCentre: {0, 1}, // top-center
+		domain.AttRight:  {0, 2}, // top-right
+		domain.MidLeft:   {1, 0},
+		domain.MidCentre: {1, 1},
+		domain.MidRight:  {1, 2},
+		domain.DefLeft:   {2, 0}, // bottom-left
+		domain.DefCentre: {2, 1},
+		domain.DefRight:  {2, 2}, // bottom-right
 	}
 
 	// Build 3x3 grid
@@ -149,7 +152,7 @@ func buildZoneIndicator(zone game.PitchZone, teamInPossession *game.MatchPartici
 }
 
 // buildTimelineFromEvents creates a centered timeline with home and away events
-func buildTimelineFromEvents(homeEvents, awayEvents []game.Event, colWidth int) string {
+func buildTimelineFromEvents(homeEvents, awayEvents []domain.Event, colWidth int) string {
 	// Calculate timeline column width (half of ticker width minus gap)
 	timelineWidth := (colWidth / 2) - 2
 
@@ -170,12 +173,12 @@ func (m MatchModel) View() string {
 	footer := ""
 	if !m.match.IsHalfTime() && !m.match.IsFullTime() && len(m.match.Events) > 0 {
 		latestEvent := m.match.Events[len(m.match.Events)-1]
-		commentary := game.GenerateCommentary(latestEvent, m.match)
+		commentary := GenerateCommentary(latestEvent, m.match)
 
 		style := lipgloss.NewStyle().Align(lipgloss.Center).Width(m.width)
 
 		// Use the commentary's For field to determine styling
-		if commentary.EventType == game.GoalEvent && commentary.For != nil {
+		if commentary.EventType == domain.GoalEvent && commentary.For != nil {
 			style = style.Bold(true).
 				Background(lipgloss.Color(commentary.For.Club.Background)).
 				Foreground(lipgloss.Color(commentary.For.Club.Foreground))
@@ -193,10 +196,10 @@ func (m MatchModel) View() string {
 		timeStr = "HT"
 	} else if m.match.IsFullTime() {
 		timeStr = "FT"
-	} else if m.match.CurrentHalf == game.FirstHalf && m.match.IsInAddedTime() {
-		timeStr += fmt.Sprintf("+%v'", m.match.GetAddedTime(game.FirstHalf))
-	} else if m.match.CurrentHalf == game.SecondHalf && m.match.IsInAddedTime() {
-		timeStr += fmt.Sprintf("+%v'", m.match.GetAddedTime(game.SecondHalf))
+	} else if m.match.CurrentHalf == domain.FirstHalf && m.match.IsInAddedTime() {
+		timeStr += fmt.Sprintf("+%v'", m.match.GetAddedTime(domain.FirstHalf))
+	} else if m.match.CurrentHalf == domain.SecondHalf && m.match.IsInAddedTime() {
+		timeStr += fmt.Sprintf("+%v'", m.match.GetAddedTime(domain.SecondHalf))
 	}
 	time := lipgloss.NewStyle().
 		Padding(0, 1).
@@ -212,10 +215,10 @@ func (m MatchModel) View() string {
 	)
 
 	// Filter events for each team's timeline (only show goal events)
-	var homeEvents []game.Event
-	var awayEvents []game.Event
+	var homeEvents []domain.Event
+	var awayEvents []domain.Event
 	for _, event := range m.match.Events {
-		if event.Type == game.GoalEvent {
+		if event.Type == domain.GoalEvent {
 			if event.For == m.match.Home {
 				homeEvents = append(homeEvents, event)
 			} else if event.For == m.match.Away {
