@@ -3,6 +3,7 @@ package tui
 import (
 	"time"
 
+	"github.com/cameronjpr/gaffer/internal/domain"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -24,6 +25,13 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
+	case goToManagerHubMsg:
+		m.mode = ManagerHubMode
+		// Send WindowSizeMsg to newly activated model
+		m.managerHub.width = m.width
+		m.managerHub.height = m.height
+		return m, tick()
+
 	case startPreMatchMsg:
 		m.mode = PreMatchMode
 		// Send WindowSizeMsg to newly activated model
@@ -37,6 +45,27 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.match.width = m.width
 		m.match.height = m.height
 		return m, tick()
+
+	case matchFinishedMsg:
+		match := msg.match
+		match.ForFixture.Result = *msg.match
+
+		// Load the next fixture
+		nextFixture, err := m.season.GetNextFixture()
+		if err != nil {
+			// No more matches, for now we just quit
+			return m, tea.Quit
+		}
+		nextMatch := domain.NewMatchFromFixture(nextFixture)
+		m.currentMatch = &nextMatch
+
+		// Update the child models to point to the new match
+		m.prematch = NewPreMatchModel(m.currentMatch)
+		m.match = NewMatchModel(m.currentMatch)
+
+		// Go back to the hub
+		m.mode = ManagerHubMode
+		return m, tick()
 	}
 
 	var cmd tea.Cmd
@@ -45,6 +74,11 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		var newMenu tea.Model
 		newMenu, cmd = m.menu.Update(msg)
 		m.menu = newMenu.(MenuModel)
+
+	case ManagerHubMode:
+		var newManagerHub tea.Model
+		newManagerHub, cmd = m.managerHub.Update(msg)
+		m.managerHub = newManagerHub.(ManagerHubModel)
 
 	case PreMatchMode:
 		var newPrematch tea.Model
@@ -70,6 +104,8 @@ func (m AppModel) View() string {
 	switch m.mode {
 	case MenuMode:
 		return m.menu.View()
+	case ManagerHubMode:
+		return m.managerHub.View()
 	case PreMatchMode:
 		return m.prematch.View()
 	case MatchMode:

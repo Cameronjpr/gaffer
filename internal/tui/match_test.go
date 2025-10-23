@@ -302,17 +302,17 @@ func TestColumnLayout(t *testing.T) {
 	}
 }
 
-// TestZoneIndicator verifies the 3x3 grid renders correctly
+// TestZoneIndicator verifies the 5x4 grid renders correctly (rotated to horizontal)
 func TestZoneIndicator(t *testing.T) {
 	tests := []struct {
 		name        string
 		zone        domain.PitchZone
-		expectedDot [2]int // [row, col] where ● should appear
+		expectedDot [2]int // [row, col] where ● should appear in 5x4 grid (row=lane, col=depth)
 	}{
-		{"Attacking Centre", domain.AttCentre, [2]int{0, 1}}, // top middle
-		{"Midfield Left", domain.MidLeft, [2]int{1, 0}},      // middle left
-		{"Defensive Right", domain.DefRight, [2]int{2, 2}},   // bottom right
-		{"Midfield Centre", domain.MidCentre, [2]int{1, 1}},  // center
+		{"East Centre", domain.EastCentre, [2]int{2, 3}},              // row=Centre lane, col=East
+		{"West-Mid Left Wing", domain.WestMidLeftWing, [2]int{0, 1}},  // row=Left Wing lane, col=West-Mid
+		{"West Right Wing", domain.WestRightWing, [2]int{4, 0}},       // row=Right Wing lane, col=West
+		{"East-Mid Centre", domain.EastMidCentre, [2]int{2, 2}},       // row=Centre lane, col=East-Mid
 	}
 
 	for _, tt := range tests {
@@ -320,8 +320,8 @@ func TestZoneIndicator(t *testing.T) {
 			result := buildZoneIndicator(tt.zone, nil)
 			lines := strings.Split(result, "\n")
 
-			if len(lines) != 3 {
-				t.Errorf("Expected 3 lines, got %d", len(lines))
+			if len(lines) != 5 {
+				t.Errorf("Expected 5 lines (5 lanes), got %d", len(lines))
 			}
 
 			// Check that ● appears in expected position

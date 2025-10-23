@@ -9,37 +9,61 @@ type Mode int
 
 const (
 	MenuMode Mode = iota
+	ManagerHubMode
 	PreMatchMode
 	MatchMode
 )
 
 type AppModel struct {
-	mode     Mode
-	menu     MenuModel
-	prematch PreMatchModel
-	match    MatchModel
-	width    int
-	height   int
+	mode         Mode
+	season       *domain.Season
+	currentMatch *domain.Match
+	menu         MenuModel
+	managerHub   ManagerHubModel
+	prematch     PreMatchModel
+	match        MatchModel
+	width        int
+	height       int
 }
 
 func NewModel() AppModel {
-	// For now, hardcode Leeds vs Arsenal until manager mode is implemented
-	homeClub := domain.GetClubByName("Manchester City")
-	awayClub := domain.GetClubByName("Arsenal")
-	match := domain.NewMatch(homeClub, awayClub)
+	// For now, hardcode Manchester City vs Arsenal until manager mode is implemented
+	mci := domain.GetClubByName("Manchester City")
+	ars := domain.GetClubByName("Arsenal")
+	season := domain.NewSeason([]*domain.Club{mci, ars})
+	season.GenerateGameweeks()
+	season.GenerateLeagueTable()
+
+	// Get the first fixture and create a match from it
+	nextFixture, err := season.GetNextFixture()
+	if err != nil {
+		// In a real app, you'd handle this gracefully
+		panic(err)
+	}
+	currentMatch := domain.NewMatchFromFixture(nextFixture)
 
 	return AppModel{
-		mode: MenuMode,
+		mode:         MenuMode,
+		season:       season,
+		currentMatch: &currentMatch,
 		menu: NewMenuModel([]list.Item{
 			item("New game"),
 			item("Settings"),
 		}),
-		prematch: NewPreMatchModel(match),
-		match:    NewMatchModel(match),
-		width:    0,
-		height:   0,
+		managerHub: NewManagerHubModel(season),
+		prematch:   NewPreMatchModel(&currentMatch),
+		match:      NewMatchModel(&currentMatch),
+		width:      0,
+		height:     0,
 	}
 }
 
+type goToManagerHubMsg struct{}
+
 type startPreMatchMsg struct{}
+
 type startMatchMsg struct{}
+
+type matchFinishedMsg struct {
+	match *domain.Match
+}

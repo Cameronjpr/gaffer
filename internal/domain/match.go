@@ -18,42 +18,61 @@ type PhaseResult struct {
 }
 
 type Match struct {
-	Home             *MatchParticipant
-	Away             *MatchParticipant
-	TeamInPossession *MatchParticipant
-	CurrentMinute    int
-	CurrentHalf      Half
-	ActiveZone       PitchZone
-	PhaseHistory     []PhaseResult
-	Events           []Event
+	ForFixture             *Fixture
+	Home                   *MatchParticipant
+	Away                   *MatchParticipant
+	TeamInPossession       *MatchParticipant
+	CurrentMinute          int
+	CurrentHalf            Half
+	ActiveZone             PitchZone
+	HomeAttackingDirection AttackingDirection // Which goal Home attacks (switches at halftime)
+	PhaseHistory           []PhaseResult
+	Events                 []Event
 }
 
-func NewMatch(homeClub, awayClub *Club) Match {
-	home := NewMatchParticipant(homeClub)
+func NewMatchFromFixture(f *Fixture) Match {
+	home := NewMatchParticipant(f.HomeTeam)
+	away := NewMatchParticipant(f.AwayTeam)
 	return Match{
-		Home:             home,
-		Away:             NewMatchParticipant(awayClub),
-		TeamInPossession: home, // Home team starts with kickoff
-		CurrentMinute:    1,
-		CurrentHalf:      FirstHalf,
-		ActiveZone:       MidCentre, // Kickoff from center
-		PhaseHistory:     make([]PhaseResult, 0),
-		Events:           make([]Event, 0),
+		ForFixture:             f,
+		Home:                   home,
+		Away:                   away,
+		TeamInPossession:       home, // Home team starts with kickoff
+		CurrentMinute:          1,
+		CurrentHalf:            FirstHalf,
+		ActiveZone:             WestMidCentre,     // Kickoff from center
+		HomeAttackingDirection: AttackingEast,     // Home attacks East in first half
+		PhaseHistory:           make([]PhaseResult, 0),
+		Events:                 make([]Event, 0),
 	}
 }
 
 func (m *Match) StartFirstHalf() {
 	m.CurrentHalf = FirstHalf
 	m.CurrentMinute = 1
+	m.HomeAttackingDirection = AttackingEast // Home attacks East in first half
 }
 
 func (m *Match) StartSecondHalf() {
 	m.CurrentHalf = SecondHalf
 	m.CurrentMinute = 45 // Will be incremented to 46 on first tick
+	m.HomeAttackingDirection = AttackingWest // Teams switch sides at halftime
 }
 
 func (m *Match) AddEvent(event Event) {
 	m.Events = append(m.Events, event)
+}
+
+// GetAttackingDirection returns the attacking direction for the team in possession
+func (m *Match) GetAttackingDirection() AttackingDirection {
+	if m.TeamInPossession == m.Home {
+		return m.HomeAttackingDirection
+	}
+	// Away team attacks opposite direction
+	if m.HomeAttackingDirection == AttackingEast {
+		return AttackingWest
+	}
+	return AttackingEast
 }
 
 func (m *Match) GetAddedTime(half Half) int {
@@ -104,4 +123,23 @@ func (m *Match) GetMaxPlayerNameLength() int {
 	}
 
 	return maxNameLen
+}
+
+// GetScore returns the current score by counting goal events.
+// Returns (homeScore, awayScore).
+func (m *Match) GetScore() (int, int) {
+	homeScore := 0
+	awayScore := 0
+
+	for _, event := range m.Events {
+		if event.Type == GoalEvent {
+			if event.For == m.Home {
+				homeScore++
+			} else if event.For == m.Away {
+				awayScore++
+			}
+		}
+	}
+
+	return homeScore, awayScore
 }

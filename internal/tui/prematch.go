@@ -14,9 +14,9 @@ type PreMatchModel struct {
 	height int
 }
 
-func NewPreMatchModel(match domain.Match) PreMatchModel {
+func NewPreMatchModel(match *domain.Match) PreMatchModel {
 	return PreMatchModel{
-		match: &match,
+		match: match,
 	}
 }
 

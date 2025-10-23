@@ -7,15 +7,16 @@ import (
 
 // TestPitchTopologyStructure verifies the pitch graph is well-formed
 func TestPitchTopologyStructure(t *testing.T) {
-	// Verify all zones have transitions defined
+	// Verify all zones have transitions defined (using GetValidTransitions)
 	allZones := []PitchZone{
-		DefLeft, DefCentre, DefRight,
-		MidLeft, MidCentre, MidRight,
-		AttLeft, AttCentre, AttRight,
+		WestLeftWing, WestLeftHalf, WestCentre, WestRightHalf, WestRightWing,
+		WestMidLeftWing, WestMidLeftHalf, WestMidCentre, WestMidRightHalf, WestMidRightWing,
+		EastMidLeftWing, EastMidLeftHalf, EastMidCentre, EastMidRightHalf, EastMidRightWing,
+		EastLeftWing, EastLeftHalf, EastCentre, EastRightHalf, EastRightWing,
 	}
 
 	for _, zone := range allZones {
-		transitions := PitchTopology[zone]
+		transitions := GetValidTransitions(zone)
 		if len(transitions) == 0 {
 			t.Errorf("Zone %s has no transitions defined", GetZoneName(zone))
 		}
@@ -26,13 +27,14 @@ func TestPitchTopologyStructure(t *testing.T) {
 func TestZoneDepthAndLanes(t *testing.T) {
 	tests := []struct {
 		zone         PitchZone
-		expectedDepth int
-		expectedLane  int
+		expectedDepth int // Row: 1=West, 2=West-Mid, 3=East-Mid, 4=East
+		expectedLane  int // Col: 1=left wing, 2=left half, 3=centre, 4=right half, 5=right wing
 	}{
-		{DefLeft, 1, 1},
-		{DefCentre, 1, 2},
-		{MidCentre, 2, 2},
-		{AttRight, 3, 3},
+		{WestLeftWing, 1, 1},   // West row, left wing
+		{WestCentre, 1, 3},     // West row, centre
+		{WestMidCentre, 2, 3},  // West-Mid row, centre
+		{EastMidCentre, 3, 3},  // East-Mid row, centre
+		{EastRightWing, 4, 5},  // East row, right wing
 	}
 
 	for _, tt := range tests {
@@ -45,12 +47,13 @@ func TestZoneDepthAndLanes(t *testing.T) {
 	}
 }
 
-// TestAttackingTransitions verifies teams can always progress forward (except from attacking zones)
+// TestAttackingTransitions verifies teams can always progress forward (except from East/West ends)
 func TestAttackingTransitions(t *testing.T) {
-	// Defensive and midfield zones should have forward options
+	// Middle zones should have forward options (when attacking East)
 	shouldHaveForward := []PitchZone{
-		DefLeft, DefCentre, DefRight,
-		MidLeft, MidCentre, MidRight,
+		WestLeftWing, WestLeftHalf, WestCentre, WestRightHalf, WestRightWing,
+		WestMidLeftWing, WestMidLeftHalf, WestMidCentre, WestMidRightHalf, WestMidRightWing,
+		EastMidLeftWing, EastMidLeftHalf, EastMidCentre, EastMidRightHalf, EastMidRightWing,
 	}
 
 	for _, zone := range shouldHaveForward {
@@ -60,24 +63,24 @@ func TestAttackingTransitions(t *testing.T) {
 		}
 	}
 
-	// Attacking zones should NOT have forward options (they're already at the top)
-	attackingZones := []PitchZone{AttLeft, AttCentre, AttRight}
-	for _, zone := range attackingZones {
+	// East zones should NOT have forward options (they're already at East end when attacking East)
+	eastZones := []PitchZone{EastLeftWing, EastLeftHalf, EastCentre, EastRightHalf, EastRightWing}
+	for _, zone := range eastZones {
 		attacking := GetAttackingTransitions(zone)
 		if len(attacking) > 0 {
-			t.Errorf("Zone %s has forward transitions but it's already in attacking third", GetZoneName(zone))
+			t.Errorf("Zone %s has forward transitions but it's already at East end", GetZoneName(zone))
 		}
 	}
 }
 
 // Example_zoneProgression shows how to use the zone system in match simulation
 func Example_zoneProgression() {
-	// Start in defensive centre
-	currentZone := DefCentre
+	// Start in West centre
+	currentZone := WestCentre
 
 	fmt.Printf("Starting in: %s\n", GetZoneName(currentZone))
 
-	// Team has strong advantage, wants to attack
+	// Team has strong advantage, wants to attack (East)
 	attacking := GetAttackingTransitions(currentZone)
 	fmt.Printf("Can attack to: ")
 	for i, t := range attacking {
@@ -107,18 +110,18 @@ func Example_zoneProgression() {
 	fmt.Println()
 
 	// Output:
-	// Starting in: Defensive Centre
-	// Can attack to: Midfield Centre (value: 2), Midfield Left (value: 1), Midfield Right (value: 1)
-	// Moved to: Midfield Centre
-	// Can go lateral to: Midfield Left, Midfield Right
+	// Starting in: West Centre
+	// Can attack to: West-Mid Left Half-Space (value: 1), West-Mid Centre (value: 1), West-Mid Right Half-Space (value: 1)
+	// Moved to: West-Mid Centre
+	// Can go lateral to: West-Mid Left Half-Space, West-Mid Right Half-Space
 }
 
 // Example_matchProgression shows simulating ball progression over multiple phases
 func Example_matchProgression() {
-	currentZone := DefLeft
+	currentZone := WestLeftWing
 	fmt.Printf("Starting zone: %s\n\n", GetZoneName(currentZone))
 
-	// Simulate 5 phases of attacking play
+	// Simulate 5 phases of attacking play (attacking East)
 	for phase := 1; phase <= 5; phase++ {
 		fmt.Printf("Phase %d - In %s\n", phase, GetZoneName(currentZone))
 
@@ -128,7 +131,7 @@ func Example_matchProgression() {
 			currentZone = best.To
 			fmt.Printf("  → Advanced to %s (attacking value: %d)\n", GetZoneName(currentZone), best.AttackingValue)
 		} else {
-			fmt.Println("  → No forward progress available (at attacking zone)")
+			fmt.Println("  → No forward progress available (at East end)")
 			break
 		}
 
@@ -139,15 +142,18 @@ func Example_matchProgression() {
 	}
 
 	// Output:
-	// Starting zone: Defensive Left
+	// Starting zone: West Left Wing
 	//
-	// Phase 1 - In Defensive Left
-	//   → Advanced to Midfield Left (attacking value: 2)
+	// Phase 1 - In West Left Wing
+	//   → Advanced to West-Mid Left Wing (attacking value: 1)
 	//
-	// Phase 2 - In Midfield Left
-	//   → Advanced to Attacking Left (attacking value: 3)
+	// Phase 2 - In West-Mid Left Wing
+	//   → Advanced to East-Mid Left Wing (attacking value: 1)
+	//
+	// Phase 3 - In East-Mid Left Wing
+	//   → Advanced to East Left Wing (attacking value: 1)
 	//   → In shooting position!
 	//
-	// Phase 3 - In Attacking Left
-	//   → No forward progress available (at attacking zone)
+	// Phase 4 - In East Left Wing
+	//   → No forward progress available (at East end)
 }
