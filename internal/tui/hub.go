@@ -50,9 +50,10 @@ func (m ManagerHubModel) View() string {
 		Width(m.width).
 		Render("Press [Space] to start pre-match")
 
-	leagueTableStr := "League Table:\n"
-	for i, position := range m.Season.LeagueTable.Positions {
-		leagueTableStr += fmt.Sprintf("%d.  %s\n", i+1, position.Club.Name)
+	leagueTableStr := "Pos.  |  Name  |  Played  |  Points\n"
+	for i, position := range m.Season.GetLeagueTable().Positions {
+
+		leagueTableStr += fmt.Sprintf("%d. |  %s  |  %d  |  %d pts\n", i+1, position.Club.Name, position.Played, position.Points)
 	}
 
 	fixturesStr := "Fixtures:\n"

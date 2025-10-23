@@ -82,7 +82,7 @@ func TestGetNextFixture_ReturnsErrorWhenNoFixturesRemain(t *testing.T) {
 	// Mark all fixtures as played
 	for i := range season.Gameweeks {
 		for j := range season.Gameweeks[i].Fixtures {
-			season.Gameweeks[i].Fixtures[j].Result = NewMatchFromFixture(&season.Gameweeks[i].Fixtures[j])
+			season.Gameweeks[i].Fixtures[j].Result = NewMatchFromFixture(season.Gameweeks[i].Fixtures[j])
 		}
 	}
 
@@ -129,5 +129,62 @@ func TestGetNextFixture_WithoutMarkingAsPlayed_ReturnsSameFixture(t *testing.T) 
 		t.Errorf("BUG NOT REPRODUCED: Expected same fixture ID, got first=%d, next=%d", firstFixture.ID, nextFixture.ID)
 	} else {
 		t.Logf("BUG CONFIRMED: GetNextFixture returns the same fixture (ID=%d) when not marked as played", firstFixture.ID)
+	}
+}
+
+func TestGetLeagueTable_HandlesUnplayedFixtures(t *testing.T) {
+	// This test ensures GetLeagueTable doesn't crash when there are unplayed fixtures
+	// Regression test for nil pointer panic when fixture.Result is nil
+	club1 := &Club{Name: "Arsenal"}
+	club2 := &Club{Name: "Chelsea"}
+	club3 := &Club{Name: "Liverpool"}
+	clubs := []*Club{club1, club2, club3}
+
+	season := NewSeason(clubs)
+	season.GenerateGameweeks()
+
+	// Play only the first fixture
+	firstFixture, err := season.GetNextFixture()
+	if err != nil {
+		t.Fatalf("Failed to get first fixture: %v", err)
+	}
+	firstFixture.Result = NewMatchFromFixture(firstFixture)
+	// Simulate a win for home team
+	firstFixture.Result.Home.Score = 2
+	firstFixture.Result.Away.Score = 1
+
+	// Debug: Check fixture results
+	allFixtures := season.GetFixturesForClub(club1)
+	playedCount := 0
+	for _, f := range allFixtures {
+		if f.Result != nil {
+			playedCount++
+			if f.Result.Home == nil || f.Result.Away == nil {
+				t.Errorf("Fixture %d has Result but nil Home or Away", f.ID)
+			}
+		}
+	}
+	t.Logf("Total fixtures: %d, Played: %d", len(allFixtures), playedCount)
+
+	// Call GetLeagueTable - should NOT crash even though most fixtures are unplayed
+	table := season.GetLeagueTable()
+
+	// Verify table was generated
+	if len(table.Positions) != 3 {
+		t.Errorf("Expected 3 positions in table, got %d", len(table.Positions))
+	}
+
+	// Verify the winner has 3 points, others have 0
+	totalPoints := 0
+	for _, pos := range table.Positions {
+		totalPoints += pos.Points
+		t.Logf("Club %s: %d points", pos.Club.Name, pos.Points)
+		if pos.Club == firstFixture.Result.GetWinner() && pos.Points != 3 {
+			t.Errorf("Winner %s should have 3 points, got %d", pos.Club.Name, pos.Points)
+		}
+	}
+
+	if totalPoints != 3 {
+		t.Errorf("Expected total of 3 points (1 match played), got %d", totalPoints)
 	}
 }

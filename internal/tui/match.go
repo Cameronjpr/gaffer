@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/cameronjpr/gaffer/internal/domain"
 	"github.com/cameronjpr/gaffer/internal/simulation"
@@ -78,11 +77,11 @@ func (m MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// If a goal was scored, pause longer to let user see it
 		if goalScored {
-			return m, tickWithDuration(time.Second * 3)
+			return m, tickWithDuration(goalTickDuration)
 		}
 
 		if m.match.IsInAddedTime() {
-			return m, tickWithDuration(time.Second * 2)
+			return m, tickWithDuration(addedTimeTickDuration)
 		}
 
 		// Return the next tick command to keep the loop going
@@ -114,9 +113,9 @@ func buildTimelineColumnFromEvents(events []domain.Event, width int, align lipgl
 		Render(timeline)
 }
 
-// buildZoneIndicator creates a 5x4 grid showing current active zone
+// buildZoneIndicator creates a 5x4 grid showing current active zone with goals
 // Layout: 5 rows (lanes: LW, LH, C, RH, RW) × 4 columns (West to East)
-func buildZoneIndicator(zone domain.PitchZone, teamInPossession *domain.MatchParticipant) string {
+func buildZoneIndicator(zone domain.PitchZone, match *domain.Match) string {
 	// Map zones to grid positions (horizontal pitch: West to East, left to right)
 	// Row represents lane (0=Left Wing, 4=Right Wing)
 	// Column represents depth (0=West, 3=East)
@@ -161,15 +160,51 @@ func buildZoneIndicator(zone domain.PitchZone, teamInPossession *domain.MatchPar
 		}
 	}
 
-	// Render grid (5 rows × 4 columns, West to East left-to-right)
+	// Determine goal colors based on which half we're in
+	// First half: Home attacks East (]), Away attacks West ([)
+	// Second half: Teams switch sides
+	var westGoalColor, eastGoalColor lipgloss.Color
+	if match != nil {
+		if match.HomeAttackingDirection == domain.AttackingEast {
+			// First half: Home attacks East, Away defends West
+			westGoalColor = lipgloss.Color(match.Home.Club.Background)
+			eastGoalColor = lipgloss.Color(match.Away.Club.Background)
+		} else {
+			// First half: Away attacks West, Home defends East
+			westGoalColor = lipgloss.Color(match.Away.Club.Background)
+			eastGoalColor = lipgloss.Color(match.Home.Club.Background)
+		}
+	} else {
+		// Default colors if match is nil
+		westGoalColor = lipgloss.Color("240")
+		eastGoalColor = lipgloss.Color("240")
+	}
+
+	westGoalStyle := lipgloss.NewStyle().Foreground(westGoalColor)
+	eastGoalStyle := lipgloss.NewStyle().Foreground(eastGoalColor)
+
+	// Render grid (5 rows × 4 columns, West to East left-to-right) with goals
 	result := ""
 	for row := range 5 {
+		// West goal bracket
+		if row == 2 {
+			result += westGoalStyle.Render("[")
+		} else {
+			result += " "
+		}
+
+		// Pitch zones
 		for col := range 4 {
 			result += grid[row][col]
-			if col < 3 {
-				result += " "
-			}
 		}
+
+		// East goal bracket
+		if row == 2 {
+			result += eastGoalStyle.Render("]")
+		} else {
+			result += ""
+		}
+
 		if row < 4 {
 			result += "\n\n"
 		}
@@ -223,9 +258,9 @@ func (m MatchModel) View() string {
 		timeStr = "HT"
 	} else if m.match.IsFullTime() {
 		timeStr = "FT"
-	} else if m.match.CurrentHalf == domain.FirstHalf && m.match.IsInAddedTime() {
+	} else if m.match.IsFirstHalf() && m.match.IsInAddedTime() {
 		timeStr += fmt.Sprintf("+%v'", m.match.GetAddedTime(domain.FirstHalf))
-	} else if m.match.CurrentHalf == domain.SecondHalf && m.match.IsInAddedTime() {
+	} else if m.match.IsSecondHalf() && m.match.IsInAddedTime() {
 		timeStr += fmt.Sprintf("+%v'", m.match.GetAddedTime(domain.SecondHalf))
 	}
 	time := lipgloss.NewStyle().
@@ -255,7 +290,7 @@ func (m MatchModel) View() string {
 	}
 
 	timeline := buildTimelineFromEvents(homeEvents, awayEvents, colWidth)
-	zoneIndicator := buildZoneIndicator(m.match.ActiveZone, m.match.TeamInPossession)
+	zoneIndicator := buildZoneIndicator(m.match.ActiveZone, m.match)
 	gap := "  "
 
 	possessionIndicator := lipgloss.NewStyle().

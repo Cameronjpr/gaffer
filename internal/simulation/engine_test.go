@@ -28,7 +28,7 @@ func TestGoalAverageOverMultipleMatches(t *testing.T) {
 		// Create a fresh match
 		fixture := &domain.Fixture{HomeTeam: homeClub, AwayTeam: awayClub}
 		match := domain.NewMatchFromFixture(fixture)
-		engine := NewEngine(&match)
+		engine := NewEngine(match)
 
 		// Simulate full 90 minutes
 		for minute := 1; minute <= 90; minute++ {
@@ -96,7 +96,7 @@ func TestShotAverageOverMultipleMatches(t *testing.T) {
 		// Create a fresh match
 		fixture := &domain.Fixture{HomeTeam: homeClub, AwayTeam: awayClub}
 		match := domain.NewMatchFromFixture(fixture)
-		engine := NewEngine(&match)
+		engine := NewEngine(match)
 
 		// Simulate full 90 minutes
 		for minute := 1; minute <= 90; minute++ {
@@ -157,7 +157,7 @@ func TestSimulationDeterminism(t *testing.T) {
 	for matchNum := 0; matchNum < 2; matchNum++ {
 		fixture := &domain.Fixture{HomeTeam: homeClub, AwayTeam: awayClub}
 		match := domain.NewMatchFromFixture(fixture)
-		engine := NewEngine(&match)
+		engine := NewEngine(match)
 
 		for minute := 1; minute <= 90; minute++ {
 			match.CurrentMinute = minute
@@ -198,7 +198,7 @@ func TestShotDistribution(t *testing.T) {
 	for i := 0; i < numMatches; i++ {
 		fixture := &domain.Fixture{HomeTeam: homeClub, AwayTeam: awayClub}
 		match := domain.NewMatchFromFixture(fixture)
-		engine := NewEngine(&match)
+		engine := NewEngine(match)
 
 		for minute := 1; minute <= 90; minute++ {
 			match.CurrentMinute = minute
@@ -290,7 +290,7 @@ func TestSimulationBasicSanity(t *testing.T) {
 
 	fixture := &domain.Fixture{HomeTeam: homeClub, AwayTeam: awayClub}
 	match := domain.NewMatchFromFixture(fixture)
-	engine := NewEngine(&match)
+	engine := NewEngine(match)
 
 	for minute := 1; minute <= 90; minute++ {
 		match.CurrentMinute = minute
@@ -362,7 +362,7 @@ func TestStrongerTeamsPenetrateMore(t *testing.T) {
 	for i := 0; i < numMatches; i++ {
 		fixture := &domain.Fixture{HomeTeam: homeClub, AwayTeam: awayClub}
 		match := domain.NewMatchFromFixture(fixture)
-		engine := NewEngine(&match)
+		engine := NewEngine(match)
 
 		for minute := 1; minute <= 90; minute++ {
 			match.CurrentMinute = minute

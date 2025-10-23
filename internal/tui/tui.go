@@ -48,7 +48,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case matchFinishedMsg:
 		match := msg.match
-		match.ForFixture.Result = *msg.match
+		match.ForFixture.Result = msg.match
 
 		// Load the next fixture
 		nextFixture, err := m.season.GetNextFixture()
@@ -57,7 +57,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 		nextMatch := domain.NewMatchFromFixture(nextFixture)
-		m.currentMatch = &nextMatch
+		m.currentMatch = nextMatch
 
 		// Update the child models to point to the new match
 		m.prematch = NewPreMatchModel(m.currentMatch)

@@ -32,7 +32,6 @@ func NewModel() AppModel {
 	ars := domain.GetClubByName("Arsenal")
 	season := domain.NewSeason([]*domain.Club{mci, ars})
 	season.GenerateGameweeks()
-	season.GenerateLeagueTable()
 
 	// Get the first fixture and create a match from it
 	nextFixture, err := season.GetNextFixture()
@@ -45,14 +44,14 @@ func NewModel() AppModel {
 	return AppModel{
 		mode:         MenuMode,
 		season:       season,
-		currentMatch: &currentMatch,
+		currentMatch: currentMatch,
 		menu: NewMenuModel([]list.Item{
 			item("New game"),
 			item("Settings"),
 		}),
 		managerHub: NewManagerHubModel(season),
-		prematch:   NewPreMatchModel(&currentMatch),
-		match:      NewMatchModel(&currentMatch),
+		prematch:   NewPreMatchModel(currentMatch),
+		match:      NewMatchModel(currentMatch),
 		width:      0,
 		height:     0,
 	}

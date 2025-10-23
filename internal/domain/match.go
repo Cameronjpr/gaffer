@@ -30,18 +30,18 @@ type Match struct {
 	Events                 []Event
 }
 
-func NewMatchFromFixture(f *Fixture) Match {
+func NewMatchFromFixture(f *Fixture) *Match {
 	home := NewMatchParticipant(f.HomeTeam)
 	away := NewMatchParticipant(f.AwayTeam)
-	return Match{
+	return &Match{
 		ForFixture:             f,
 		Home:                   home,
 		Away:                   away,
 		TeamInPossession:       home, // Home team starts with kickoff
 		CurrentMinute:          1,
 		CurrentHalf:            FirstHalf,
-		ActiveZone:             WestMidCentre,     // Kickoff from center
-		HomeAttackingDirection: AttackingEast,     // Home attacks East in first half
+		ActiveZone:             WestMidCentre, // Kickoff from center
+		HomeAttackingDirection: AttackingEast, // Home attacks East in first half
 		PhaseHistory:           make([]PhaseResult, 0),
 		Events:                 make([]Event, 0),
 	}
@@ -55,7 +55,7 @@ func (m *Match) StartFirstHalf() {
 
 func (m *Match) StartSecondHalf() {
 	m.CurrentHalf = SecondHalf
-	m.CurrentMinute = 45 // Will be incremented to 46 on first tick
+	m.CurrentMinute = 45                     // Will be incremented to 46 on first tick
 	m.HomeAttackingDirection = AttackingWest // Teams switch sides at halftime
 }
 
@@ -105,6 +105,14 @@ func (m Match) IsFullTime() bool {
 	return m.CurrentMinute >= 90+m.GetAddedTime(SecondHalf)
 }
 
+func (m *Match) IsFirstHalf() bool {
+	return m.CurrentHalf == FirstHalf
+}
+
+func (m *Match) IsSecondHalf() bool {
+	return m.CurrentHalf == SecondHalf
+}
+
 func (m *Match) GetMaxPlayerNameLength() int {
 	maxNameLen := 0
 
@@ -142,4 +150,18 @@ func (m *Match) GetScore() (int, int) {
 	}
 
 	return homeScore, awayScore
+}
+
+func (m *Match) GetWinner() *Club {
+	// Safety check - should never happen, but prevents crash
+	if m == nil || m.Home == nil || m.Away == nil {
+		return nil
+	}
+
+	if m.Home.Score > m.Away.Score {
+		return m.Home.Club
+	} else if m.Away.Score > m.Home.Score {
+		return m.Away.Club
+	}
+	return nil
 }
