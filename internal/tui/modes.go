@@ -1,11 +1,8 @@
 package tui
 
 import (
-	"time"
-
 	"github.com/cameronjpr/gaffer/internal/game"
 	"github.com/charmbracelet/bubbles/list"
-	tea "github.com/charmbracelet/bubbletea"
 )
 
 type Mode int
@@ -46,13 +43,3 @@ func NewModel() AppModel {
 
 type startPreMatchMsg struct{}
 type startMatchMsg struct{}
-
-func tick() tea.Cmd {
-	return tickWithDuration(time.Millisecond * 200)
-}
-
-func tickWithDuration(d time.Duration) tea.Cmd {
-	return tea.Tick(d, func(t time.Time) tea.Msg {
-		return tickMsg(t)
-	})
-}

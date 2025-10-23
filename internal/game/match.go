@@ -5,11 +5,8 @@ import (
 	"math/rand/v2"
 )
 
-var (
-	phases = 90
-)
-
-const goalscoringThreshold = 80
+const goalscoringThreshold = 15
+const shotThreshold = 10
 
 type Half int
 
@@ -19,12 +16,14 @@ const (
 )
 
 type Match struct {
-	Home          *MatchParticipant
-	Away          *MatchParticipant
-	CurrentMinute int
-	CurrentHalf   Half
-	PhaseHistory  []PhaseResult
-	Events        []Event
+	Home             *MatchParticipant
+	Away             *MatchParticipant
+	TeamInPossession *MatchParticipant
+	CurrentMinute    int
+	CurrentHalf      Half
+	ActiveZone       PitchZone
+	PhaseHistory     []PhaseResult
+	Events           []Event
 }
 
 type PhaseResult struct {
@@ -38,13 +37,16 @@ type PhaseResult struct {
 }
 
 func NewMatch(homeClub, awayClub *Club) Match {
+	home := NewMatchParticipant(homeClub)
 	return Match{
-		Home:          NewMatchParticipant(homeClub),
-		Away:          NewMatchParticipant(awayClub),
-		CurrentMinute: 1,
-		CurrentHalf:   FirstHalf,
-		PhaseHistory:  make([]PhaseResult, 0),
-		Events:        make([]Event, 0),
+		Home:             home,
+		Away:             NewMatchParticipant(awayClub),
+		TeamInPossession: home, // Home team starts with kickoff
+		CurrentMinute:    1,
+		CurrentHalf:      FirstHalf,
+		ActiveZone:       MidCentre, // Kickoff from center
+		PhaseHistory:     make([]PhaseResult, 0),
+		Events:           make([]Event, 0),
 	}
 }
 
@@ -112,33 +114,106 @@ func (m *Match) GetMaxPlayerNameLength() int {
 	return maxNameLen
 }
 
+// ProgressBall attempts to move the ball to a better zone based on power difference
+func (m *Match) ProgressBall(powerDiff int) {
+	// Strong advantage - try to attack
+	if powerDiff >= 10 {
+		attacking := GetAttackingTransitions(m.ActiveZone)
+		if len(attacking) > 0 {
+			// Pick best attacking transition or random if multiple equal
+			best := GetBestAttackingTransition(m.ActiveZone)
+			if best != nil {
+				m.ActiveZone = best.To
+			}
+		}
+		return
+	}
+
+	// Moderate advantage - mix of lateral and forward
+	if powerDiff >= 5 {
+		allMoves := PitchTopology[m.ActiveZone]
+		// Prefer forward, but allow lateral
+		var validMoves []ZoneTransition
+		for _, move := range allMoves {
+			if move.IsForward || move.IsLateral {
+				validMoves = append(validMoves, move)
+			}
+		}
+		if len(validMoves) > 0 {
+			// Weight towards forward moves
+			forwardMoves := GetAttackingTransitions(m.ActiveZone)
+			if len(forwardMoves) > 0 && rand.IntN(100) < 70 {
+				m.ActiveZone = forwardMoves[rand.IntN(len(forwardMoves))].To
+			} else if len(validMoves) > 0 {
+				m.ActiveZone = validMoves[rand.IntN(len(validMoves))].To
+			}
+		}
+		return
+	}
+
+	// Small advantage - mostly lateral, some backward
+	lateralMoves := GetLateralTransitions(m.ActiveZone)
+	if len(lateralMoves) > 0 && rand.IntN(100) < 60 {
+		m.ActiveZone = lateralMoves[rand.IntN(len(lateralMoves))].To
+	}
+}
+
 func (m *Match) PlayPhase() PhaseResult {
-	homeRoll := rand.IntN(100)
-	awayRoll := rand.IntN(100)
+	homeRoll := rand.IntN(20)
+	awayRoll := rand.IntN(20)
 
 	homePhasePower := m.Home.Club.Strength + homeRoll
 	awayPhasePower := m.Away.Club.Strength + awayRoll
-	powerDiff := math.Abs(float64(homePhasePower - awayPhasePower))
+	powerDiff := int(math.Abs(float64(homePhasePower - awayPhasePower)))
 
-	if homePhasePower > awayPhasePower {
-		if m.Home.HasPossession {
-			m.AddEvent(NewEvent(PossessionRetainedEvent, m.CurrentMinute, m.Home, nil))
-		} else {
-			m.Home.WinPossession()
-			m.Away.LosePossession()
-			m.AddEvent(NewEvent(PossessionChangedEvent, m.CurrentMinute, m.Home, nil))
+	morePowerfulTeam := m.Home
+	if homePhasePower < awayPhasePower {
+		morePowerfulTeam = m.Away
+	}
+
+	// Possibility to change possession
+	if morePowerfulTeam != m.TeamInPossession {
+		m.AddEvent(NewEvent(PossessionChangedEvent, m.CurrentMinute, morePowerfulTeam, nil))
+		m.TeamInPossession = morePowerfulTeam
+
+		// When possession changes, ball likely moves backward for new team
+		defensiveMoves := GetDefensiveTransitions(m.ActiveZone)
+		if len(defensiveMoves) > 0 {
+			m.ActiveZone = defensiveMoves[rand.IntN(len(defensiveMoves))].To
 		}
-	} else if homePhasePower < awayPhasePower {
-		if m.Away.HasPossession {
-			m.AddEvent(NewEvent(PossessionRetainedEvent, m.CurrentMinute, m.Away, nil))
-		} else {
-			m.Away.WinPossession()
-			m.Home.LosePossession()
-			m.AddEvent(NewEvent(PossessionChangedEvent, m.CurrentMinute, m.Away, nil))
+
+		return PhaseResult{
+			HomeRoll:       homeRoll,
+			AwayRoll:       awayRoll,
+			HomePhasePower: homePhasePower,
+			AwayPhasePower: awayPhasePower,
+			HomeGoals:      0,
+			AwayGoals:      0,
 		}
 	}
 
+	// Team kept the ball, try to progress it
+	m.ProgressBall(powerDiff)
+
+	// Team kept the ball, no action taken
+	if powerDiff < shotThreshold {
+		return PhaseResult{
+			HomeRoll:       homeRoll,
+			AwayRoll:       awayRoll,
+			HomePhasePower: homePhasePower,
+			AwayPhasePower: awayPhasePower,
+			HomeGoals:      0,
+			AwayGoals:      0,
+		}
+	}
+
+	// Team has ball, but didn't take a shot
 	if powerDiff < goalscoringThreshold {
+		if powerDiff%2 == 0 {
+			m.AddEvent(NewEvent(SavedShotEvent, m.CurrentMinute, morePowerfulTeam, nil))
+		} else {
+			m.AddEvent(NewEvent(MissedShotEvent, m.CurrentMinute, morePowerfulTeam, nil))
+		}
 		return PhaseResult{
 			HomeRoll:       homeRoll,
 			AwayRoll:       awayRoll,

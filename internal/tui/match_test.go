@@ -302,6 +302,52 @@ func TestColumnLayout(t *testing.T) {
 	}
 }
 
+// TestZoneIndicator verifies the 3x3 grid renders correctly
+func TestZoneIndicator(t *testing.T) {
+	tests := []struct {
+		name         string
+		zone         game.PitchZone
+		expectedDot  [2]int // [row, col] where ● should appear
+	}{
+		{"Attacking Centre", game.AttCentre, [2]int{0, 1}},   // top middle
+		{"Midfield Left", game.MidLeft, [2]int{1, 0}},        // middle left
+		{"Defensive Right", game.DefRight, [2]int{2, 2}},     // bottom right
+		{"Midfield Centre", game.MidCentre, [2]int{1, 1}},    // center
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := buildZoneIndicator(tt.zone, nil)
+			lines := strings.Split(result, "\n")
+
+			if len(lines) != 3 {
+				t.Errorf("Expected 3 lines, got %d", len(lines))
+			}
+
+			// Check that ● appears in expected position
+			expectedRow := tt.expectedDot[0]
+			expectedCol := tt.expectedDot[1]
+
+			// Parse the line (format: "X X X" where X is · or ●)
+			if expectedRow < len(lines) {
+				cols := strings.Split(lines[expectedRow], " ")
+				if expectedCol < len(cols) {
+					if cols[expectedCol] != "●" {
+						t.Errorf("Expected ● at [%d,%d], got %q. Full output:\n%s",
+							expectedRow, expectedCol, cols[expectedCol], result)
+					}
+				}
+			}
+
+			// Verify only one ● exists
+			dotCount := strings.Count(result, "●")
+			if dotCount != 1 {
+				t.Errorf("Expected exactly 1 ●, got %d. Output:\n%s", dotCount, result)
+			}
+		})
+	}
+}
+
 // stripANSI removes ANSI escape codes from a string for testing
 func stripANSI(s string) string {
 	// Simple ANSI stripper - removes common escape sequences

@@ -45,11 +45,17 @@ func GenerateCommentary(event Event, match *Match) CommentaryLine {
 		line.Message = fmt.Sprintf("%s win the ball", event.For.Club.Name)
 	case PossessionRetainedEvent:
 		line.Message = fmt.Sprintf("%s have the ball...", event.For.Club.Name)
-	case SaveEvent:
+	case SavedShotEvent:
 		if event.Player != nil && event.Player.Player != nil {
 			line.Message = fmt.Sprintf("Save by %s!", event.Player.Player.Name)
 		} else {
 			line.Message = "Great save!"
+		}
+	case MissedShotEvent:
+		if event.Player != nil && event.Player.Player != nil {
+			line.Message = fmt.Sprintf("Missed shot by %s!", event.Player.Player.Name)
+		} else {
+			line.Message = "Missed shot!"
 		}
 	case YellowCardEvent:
 		if event.Player != nil && event.Player.Player != nil {

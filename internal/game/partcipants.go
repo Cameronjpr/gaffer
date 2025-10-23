@@ -14,11 +14,10 @@ type MatchPlayerParticipant struct {
 
 // MatchParticipant represents a club participating in a specific match
 type MatchParticipant struct {
-	Club          *Club
-	Players       []MatchPlayerParticipant
-	Formation     string
-	Score         int
-	HasPossession bool
+	Club      *Club
+	Players   []MatchPlayerParticipant
+	Formation string
+	Score     int
 }
 
 // NewMatchParticipant creates a new match participant from a club
@@ -38,11 +37,10 @@ func NewMatchParticipant(club *Club) *MatchParticipant {
 	}
 
 	return &MatchParticipant{
-		Club:          club,
-		Players:       matchPlayers,
-		Formation:     "4-3-3",
-		Score:         0,
-		HasPossession: false,
+		Club:      club,
+		Players:   matchPlayers,
+		Formation: "4-3-3",
+		Score:     0,
 	}
 }
 
@@ -108,10 +106,10 @@ func (p *MatchParticipant) GetLineup(match *Match) string {
 		if match != nil {
 			for _, event := range match.Events {
 				if event.Type == GoalEvent &&
-				   event.For == p &&
-				   event.Player != nil &&
-				   event.Player.Player != nil &&
-				   event.Player.Player.Name == matchPlayer.Player.Name {
+					event.For == p &&
+					event.Player != nil &&
+					event.Player.Player != nil &&
+					event.Player.Player.Name == matchPlayer.Player.Name {
 					goalCount++
 				}
 			}
@@ -141,12 +139,4 @@ func (p *MatchParticipant) AddPlayer(matchPlayer MatchPlayerParticipant) {
 
 func (p *MatchParticipant) IncreaseScore() {
 	p.Score++
-}
-
-func (p *MatchParticipant) WinPossession() {
-	p.HasPossession = true
-}
-
-func (p *MatchParticipant) LosePossession() {
-	p.HasPossession = false
 }

@@ -109,6 +109,45 @@ func buildTimelineColumnFromEvents(events []game.Event, width int, align lipglos
 		Render(timeline)
 }
 
+// buildZoneIndicator creates a simple 3x3 grid showing current active zone
+func buildZoneIndicator(zone game.PitchZone, teamInPossession *game.MatchParticipant) string {
+	// Map zones to grid positions (inverted Y so attacking is on top)
+	// Row 0 (top) = Attacking third, Row 2 (bottom) = Defensive third
+	zoneMap := map[game.PitchZone][2]int{
+		game.AttLeft:   {0, 0}, // top-left
+		game.AttCentre: {0, 1}, // top-center
+		game.AttRight:  {0, 2}, // top-right
+		game.MidLeft:   {1, 0},
+		game.MidCentre: {1, 1},
+		game.MidRight:  {1, 2},
+		game.DefLeft:   {2, 0}, // bottom-left
+		game.DefCentre: {2, 1},
+		game.DefRight:  {2, 2}, // bottom-right
+	}
+
+	// Build 3x3 grid
+	grid := [3][3]string{}
+	for z, pos := range zoneMap {
+		row, col := pos[0], pos[1]
+		if z == zone {
+			grid[row][col] = "●" // Active zone
+		} else {
+			grid[row][col] = "·" // Inactive zone
+		}
+	}
+
+	// Render grid
+	result := ""
+	for row := 0; row < 3; row++ {
+		result += grid[row][0] + " " + grid[row][1] + " " + grid[row][2]
+		if row < 2 {
+			result += "\n"
+		}
+	}
+
+	return result
+}
+
 // buildTimelineFromEvents creates a centered timeline with home and away events
 func buildTimelineFromEvents(homeEvents, awayEvents []game.Event, colWidth int) string {
 	// Calculate timeline column width (half of ticker width minus gap)
@@ -186,6 +225,7 @@ func (m MatchModel) View() string {
 	}
 
 	timeline := buildTimelineFromEvents(homeEvents, awayEvents, colWidth)
+	zoneIndicator := buildZoneIndicator(m.match.ActiveZone, m.match.TeamInPossession)
 	gap := "  "
 
 	tickerContent := lipgloss.JoinVertical(
@@ -194,6 +234,8 @@ func (m MatchModel) View() string {
 		lipgloss.NewStyle().Italic(true).Render(time),
 		gap,
 		lipgloss.NewStyle().Italic(true).Render(timeline),
+		gap,
+		lipgloss.NewStyle().Faint(true).Render(zoneIndicator),
 	)
 
 	// Home team section

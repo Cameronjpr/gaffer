@@ -7,7 +7,8 @@ type EventType int
 
 const (
 	GoalEvent EventType = iota
-	SaveEvent
+	MissedShotEvent
+	SavedShotEvent
 	YellowCardEvent
 	RedCardEvent
 	InjuryEvent
@@ -23,8 +24,8 @@ const (
 type Event struct {
 	Type   EventType
 	Minute int
-	For    *MatchParticipant            // Team the event benefits/involves
-	Player *MatchPlayerParticipant      // Optional: involved player
+	For    *MatchParticipant       // Team the event benefits/involves
+	Player *MatchPlayerParticipant // Optional: involved player
 }
 
 // NewEvent creates a new event
