@@ -21,8 +21,8 @@ const zoneProgressionScaling = 2.0
 
 // Shot quality thresholds
 // These are applied AFTER zone threat is factored in
-const shotOnTargetThreshold = 0.1  // 10% of shots miss the target entirely
-const saveThreshold = 0.4          // 40% of on-target shots are saved (30% overall)
+const shotOnTargetThreshold = 0.1 // 10% of shots miss the target entirely
+const saveThreshold = 0.4         // 40% of on-target shots are saved (30% overall)
 
 // Engine runs the match simulation
 type Engine struct {
@@ -68,10 +68,7 @@ func (e *Engine) ProgressBall(powerDiff int) bool {
 		}
 	}
 
-	// Decision priority: Forward > Lateral > Backward
-	// This creates realistic build-up play patterns
-
-	// Try to go forward (70% chance if available)
+	// Try to go forward
 	if len(forwardMoves) > 0 && rand.IntN(100) < 70 {
 		// Prefer moves to higher-threat zones
 		best := forwardMoves[0]

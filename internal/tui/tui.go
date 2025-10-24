@@ -25,8 +25,24 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
+	case goToOnboardingMsg:
+		m.mode = OnboardingMode
+		// Send WindowSizeMsg to newly activated model
+		sizeMsg := tea.WindowSizeMsg{Width: m.width, Height: m.height}
+		newOnboarding, cmd := m.onboarding.Update(sizeMsg)
+		m.onboarding = newOnboarding.(OnboardingModel)
+		return m, tea.Batch(cmd, tick())
+
 	case goToManagerHubMsg:
 		m.mode = ManagerHubMode
+		var club *domain.Club
+		for _, c := range m.season.Clubs {
+			if c.Name == msg.ClubName {
+				club = c
+				break
+			}
+		}
+		m.managerHub = NewManagerHubModel(m.season, club)
 		// Send WindowSizeMsg to newly activated model
 		m.managerHub.width = m.width
 		m.managerHub.height = m.height
@@ -75,6 +91,11 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		newMenu, cmd = m.menu.Update(msg)
 		m.menu = newMenu.(MenuModel)
 
+	case OnboardingMode:
+		var newOnboarding tea.Model
+		newOnboarding, cmd = m.onboarding.Update(msg)
+		m.onboarding = newOnboarding.(OnboardingModel)
+
 	case ManagerHubMode:
 		var newManagerHub tea.Model
 		newManagerHub, cmd = m.managerHub.Update(msg)
@@ -104,6 +125,8 @@ func (m AppModel) View() string {
 	switch m.mode {
 	case MenuMode:
 		return m.menu.View()
+	case OnboardingMode:
+		return m.onboarding.View()
 	case ManagerHubMode:
 		return m.managerHub.View()
 	case PreMatchMode:

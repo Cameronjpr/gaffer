@@ -19,7 +19,6 @@ type Season struct {
 }
 
 func NewSeason(clubs []*Club) *Season {
-
 	season := Season{
 		ID:        1,
 		Name:      "2025/26",
@@ -31,33 +30,59 @@ func NewSeason(clubs []*Club) *Season {
 }
 
 func (s *Season) GenerateGameweeks() {
+	// Generate all fixtures for the season (each pair of teams plays home and away)
+	allFixtures := generateAllFixtures(s.Clubs)
+
+	// Create 38 empty gameweeks
 	for i := 1; i <= 38; i++ {
 		gameweek := Gameweek{
 			ID:       i,
 			Name:     fmt.Sprintf("Gameweek %d", i),
-			Fixtures: generateFixtures(s.Clubs),
+			Fixtures: []*Fixture{},
 		}
 		s.Gameweeks = append(s.Gameweeks, &gameweek)
 	}
+
+	// Distribute fixtures across gameweeks
+	fixturesPerGameweek := len(allFixtures) / 38
+	remainder := len(allFixtures) % 38
+
+	fixtureIndex := 0
+	for i := 0; i < 38; i++ {
+		// Some gameweeks get one extra fixture if there's a remainder
+		numFixtures := fixturesPerGameweek
+		if i < remainder {
+			numFixtures++
+		}
+
+		for j := 0; j < numFixtures && fixtureIndex < len(allFixtures); j++ {
+			s.Gameweeks[i].Fixtures = append(s.Gameweeks[i].Fixtures, allFixtures[fixtureIndex])
+			fixtureIndex++
+		}
+	}
 }
 
-func generateFixtures(clubs []*Club) []*Fixture {
+func generateAllFixtures(clubs []*Club) []*Fixture {
 	var fixtures []*Fixture
+	fixtureID := 1
 
-	for _, club := range clubs {
-		for _, opponent := range clubs {
-			if club == opponent {
+	// Generate all fixtures (each pair plays home and away)
+	for i, homeClub := range clubs {
+		for j, awayClub := range clubs {
+			if i == j {
 				continue
 			}
 			fixture := Fixture{
-				ID:       len(clubs)*len(clubs) + 1,
-				HomeTeam: club,
-				AwayTeam: opponent,
+				ID:       fixtureID,
+				HomeTeam: homeClub,
+				AwayTeam: awayClub,
 				Result:   nil,
 			}
 			fixtures = append(fixtures, &fixture)
+			fixtureID++
 		}
 	}
+
 	return fixtures
 }
 

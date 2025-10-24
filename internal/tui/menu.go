@@ -49,7 +49,7 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				choice := string(i)
 				switch choice {
 				case "New game":
-					return m, func() tea.Msg { return goToManagerHubMsg{} }
+					return m, func() tea.Msg { return goToOnboardingMsg{} }
 				case "Settings":
 					// TODO: return settings mode message
 					return m, nil

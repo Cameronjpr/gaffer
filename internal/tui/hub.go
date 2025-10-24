@@ -9,14 +9,16 @@ import (
 )
 
 type ManagerHubModel struct {
-	Season *domain.Season
-	width  int
-	height int
+	Season     *domain.Season
+	ChosenClub *domain.Club
+	width      int
+	height     int
 }
 
-func NewManagerHubModel(season *domain.Season) ManagerHubModel {
+func NewManagerHubModel(season *domain.Season, club *domain.Club) ManagerHubModel {
 	return ManagerHubModel{
-		Season: season,
+		ChosenClub: club,
+		Season:     season,
 	}
 }
 
@@ -26,9 +28,13 @@ func (m ManagerHubModel) Init() tea.Cmd {
 
 func (m ManagerHubModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		return m, nil
+
 	case tea.KeyMsg:
 		switch msg.Type {
-
 		case tea.KeySpace:
 			return m, func() tea.Msg {
 				return startPreMatchMsg{}
@@ -40,11 +46,16 @@ func (m ManagerHubModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m ManagerHubModel) View() string {
+	if m.ChosenClub == nil {
+		panic("ChosenClub is nil, cannot proceed")
+	}
 	header := lipgloss.NewStyle().
 		Align(lipgloss.Center).
 		Width(m.width).
-		Border(lipgloss.NormalBorder(), false, false, true, false).
-		Render("Manager Hub")
+		Padding(1, 2).
+		Background(lipgloss.Color(m.ChosenClub.Background)).
+		Foreground(lipgloss.Color(m.ChosenClub.Foreground)).
+		Render("Managing " + m.ChosenClub.Name)
 	footer := lipgloss.NewStyle().
 		Align(lipgloss.Center).
 		Width(m.width).
@@ -57,9 +68,21 @@ func (m ManagerHubModel) View() string {
 	}
 
 	fixturesStr := "Fixtures:\n"
-	for _, gameweek := range m.Season.Gameweeks[:4] { // First 5 fixtures
-		for _, fixture := range gameweek.Fixtures {
-			fixturesStr += fmt.Sprintf("%s vs %s\n", fixture.HomeTeam.Name, fixture.AwayTeam.Name)
+	clubFixtures := m.Season.GetFixturesForClub(m.ChosenClub)
+	// Show up to 5 fixtures
+	numToShow := len(clubFixtures)
+	if numToShow > 5 {
+		numToShow = 5
+	}
+	if numToShow == 0 {
+		fixturesStr += "No fixtures scheduled\n"
+	} else {
+		for _, fixture := range clubFixtures[:numToShow] {
+			status := ""
+			if fixture.Result != nil {
+				status = fmt.Sprintf(" %d-%d", fixture.Result.Home.Score, fixture.Result.Away.Score)
+			}
+			fixturesStr += fmt.Sprintf("%s vs %s%s\n", fixture.HomeTeam.Name, fixture.AwayTeam.Name, status)
 		}
 	}
 

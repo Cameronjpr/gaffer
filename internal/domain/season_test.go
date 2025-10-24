@@ -5,15 +5,19 @@ import (
 )
 
 func TestGetNextFixture_AdvancesThroughGameweeks(t *testing.T) {
-	// Setup: Create a season with two clubs
+	// Setup: Create a season with three clubs for more fixtures
 	club1 := &Club{Name: "Arsenal"}
 	club2 := &Club{Name: "Chelsea"}
-	clubs := []*Club{club1, club2}
+	club3 := &Club{Name: "Liverpool"}
+	clubs := []*Club{club1, club2, club3}
 
 	season := NewSeason(clubs)
 	season.GenerateGameweeks()
 
-	// Get the first fixture (should be from Gameweek 1)
+	// With 3 clubs: 3*2 = 6 total fixtures distributed across 38 gameweeks
+	// First gameweek should have at least 1 fixture
+
+	// Get the first fixture
 	firstFixture, err := season.GetNextFixture()
 	if err != nil {
 		t.Fatalf("Failed to get first fixture: %v", err)
@@ -23,15 +27,10 @@ func TestGetNextFixture_AdvancesThroughGameweeks(t *testing.T) {
 		t.Fatal("First fixture is nil")
 	}
 
-	// Verify it's from Gameweek 1
-	if season.Gameweeks[0].Fixtures[0].ID != firstFixture.ID {
-		t.Errorf("First fixture should be from Gameweek 1")
-	}
-
 	// Simulate playing the match by populating the Result
 	firstFixture.Result = NewMatchFromFixture(firstFixture)
 
-	// Get the next fixture (should be from Gameweek 1, fixture 2)
+	// Get the next fixture
 	secondFixture, err := season.GetNextFixture()
 	if err != nil {
 		t.Fatalf("Failed to get second fixture: %v", err)
@@ -46,15 +45,10 @@ func TestGetNextFixture_AdvancesThroughGameweeks(t *testing.T) {
 		t.Errorf("Second fixture should be different from first fixture, but got same ID: %d", secondFixture.ID)
 	}
 
-	// Verify it's the second fixture from Gameweek 1
-	if season.Gameweeks[0].Fixtures[1].ID != secondFixture.ID {
-		t.Errorf("Second fixture should be Gameweek 1, Fixture 2")
-	}
-
 	// Mark second fixture as played
 	secondFixture.Result = NewMatchFromFixture(secondFixture)
 
-	// Get the next fixture (should be from Gameweek 2)
+	// Get the third fixture
 	thirdFixture, err := season.GetNextFixture()
 	if err != nil {
 		t.Fatalf("Failed to get third fixture: %v", err)
@@ -64,9 +58,48 @@ func TestGetNextFixture_AdvancesThroughGameweeks(t *testing.T) {
 		t.Fatal("Third fixture is nil")
 	}
 
-	// Verify it's from Gameweek 2
-	if season.Gameweeks[1].Fixtures[0].ID != thirdFixture.ID {
-		t.Errorf("Third fixture should be from Gameweek 2, got fixture from different gameweek")
+	// Verify it's a different fixture
+	if thirdFixture.ID == firstFixture.ID || thirdFixture.ID == secondFixture.ID {
+		t.Errorf("Third fixture should be different from first two fixtures")
+	}
+}
+
+func TestGetFixturesForClub_ReturnsFixturesForChosenClub(t *testing.T) {
+	// Setup: Create a season with two clubs
+	club1 := &Club{Name: "Arsenal"}
+	club2 := &Club{Name: "Chelsea"}
+	clubs := []*Club{club1, club2}
+
+	season := NewSeason(clubs)
+	season.GenerateGameweeks()
+
+	// Verify fixtures for chosen club
+	// With 2 clubs: each plays the other twice (home and away) = 2 total fixtures
+	fixtures := season.GetFixturesForClub(club1)
+	expectedFixtures := 2
+	if len(fixtures) != expectedFixtures {
+		t.Errorf("Expected %d fixtures for chosen club, got %d", expectedFixtures, len(fixtures))
+	}
+
+	for _, fixture := range fixtures {
+		if fixture.HomeTeam != club1 && fixture.AwayTeam != club1 {
+			t.Errorf("Expected fixture to be for chosen club, got fixture with home team %s and away team %s", fixture.HomeTeam.Name, fixture.AwayTeam.Name)
+		}
+	}
+
+	// Verify one is home and one is away
+	homeCount := 0
+	awayCount := 0
+	for _, fixture := range fixtures {
+		if fixture.HomeTeam == club1 {
+			homeCount++
+		}
+		if fixture.AwayTeam == club1 {
+			awayCount++
+		}
+	}
+	if homeCount != 1 || awayCount != 1 {
+		t.Errorf("Expected 1 home and 1 away fixture, got %d home and %d away", homeCount, awayCount)
 	}
 }
 

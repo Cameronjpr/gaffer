@@ -9,9 +9,10 @@ const (
 	GoalEvent EventType = iota
 	MissedShotEvent
 	SavedShotEvent
+	InjuryEvent
+	FoulEvent
 	YellowCardEvent
 	RedCardEvent
-	InjuryEvent
 	CornerEvent
 	FreeKickEvent
 	PossessionChangedEvent

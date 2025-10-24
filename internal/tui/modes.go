@@ -9,6 +9,7 @@ type Mode int
 
 const (
 	MenuMode Mode = iota
+	OnboardingMode
 	ManagerHubMode
 	PreMatchMode
 	MatchMode
@@ -19,6 +20,7 @@ type AppModel struct {
 	season       *domain.Season
 	currentMatch *domain.Match
 	menu         MenuModel
+	onboarding   OnboardingModel
 	managerHub   ManagerHubModel
 	prematch     PreMatchModel
 	match        MatchModel
@@ -48,7 +50,8 @@ func NewModel() AppModel {
 			item("New game"),
 			item("Settings"),
 		}),
-		managerHub: NewManagerHubModel(season),
+		onboarding: NewOnboardingModel(season),
+		managerHub: NewManagerHubModel(season, nil),
 		prematch:   NewPreMatchModel(currentMatch),
 		match:      NewMatchModel(currentMatch),
 		width:      0,
@@ -56,7 +59,11 @@ func NewModel() AppModel {
 	}
 }
 
-type goToManagerHubMsg struct{}
+type goToOnboardingMsg struct{}
+
+type goToManagerHubMsg struct {
+	ClubName string
+}
 
 type startPreMatchMsg struct{}
 
