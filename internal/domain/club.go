@@ -1,6 +1,11 @@
 package domain
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"os"
+)
 
 // Club represents a football club with permanent attributes
 type Club struct {
@@ -52,13 +57,46 @@ var Clubs = []Club{
 	},
 }
 
+func GetAllClubs() []*Club {
+	jsonFile, err := os.Open("clubs.json")
+
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	var clubs []*Club
+
+	byteValue, _ := io.ReadAll(jsonFile)
+	json.Unmarshal(byteValue, &clubs)
+
+	defer jsonFile.Close()
+
+	return clubs
+}
+
 // GetClubByName returns a pointer to a club by name, or nil if not found
 func GetClubByName(name string) *Club {
-	for i := range Clubs {
-		if Clubs[i].Name == name {
-			return &Clubs[i]
+	jsonFile, err := os.Open("clubs.json")
+
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	var clubs []*Club
+
+	byteValue, _ := io.ReadAll(jsonFile)
+	json.Unmarshal(byteValue, &clubs)
+
+	for i := range clubs {
+		if clubs[i].Name == name {
+			return clubs[i]
 		}
 	}
+
+	defer jsonFile.Close()
+
 	return nil
 }
 

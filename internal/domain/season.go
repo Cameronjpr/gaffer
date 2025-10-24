@@ -19,6 +19,7 @@ type Season struct {
 }
 
 func NewSeason(clubs []*Club) *Season {
+
 	season := Season{
 		ID:        1,
 		Name:      "2025/26",
@@ -41,20 +42,23 @@ func (s *Season) GenerateGameweeks() {
 }
 
 func generateFixtures(clubs []*Club) []*Fixture {
-	return []*Fixture{
-		{
-			ID:       1,
-			HomeTeam: clubs[0],
-			AwayTeam: clubs[1],
-			Result:   nil,
-		},
-		{
-			ID:       2,
-			HomeTeam: clubs[1],
-			AwayTeam: clubs[0],
-			Result:   nil,
-		},
+	var fixtures []*Fixture
+
+	for _, club := range clubs {
+		for _, opponent := range clubs {
+			if club == opponent {
+				continue
+			}
+			fixture := Fixture{
+				ID:       len(clubs)*len(clubs) + 1,
+				HomeTeam: club,
+				AwayTeam: opponent,
+				Result:   nil,
+			}
+			fixtures = append(fixtures, &fixture)
+		}
 	}
+	return fixtures
 }
 
 func (s *Season) GetLeagueTable() LeagueTable {

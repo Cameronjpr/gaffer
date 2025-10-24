@@ -100,17 +100,17 @@ func GetValidTransitions(from PitchZone) []ZoneTransition {
 	}
 
 	// Rule 2: Can always move backward (to any zone in lower rows)
-	if fromRow > 1 {
-		for backRow := 1; backRow < fromRow; backRow++ {
-			for col := 1; col <= 5; col++ {
-				toZone := GetZoneFromRowCol(backRow, col)
-				if toZone != 0 && !seen[toZone] {
-					seen[toZone] = true
-					transitions = append(transitions, createTransition(from, toZone))
-				}
-			}
-		}
-	}
+	// if fromRow > 1 {
+	// 	for backRow := 1; backRow < fromRow; backRow++ {
+	// 		for col := 1; col <= 5; col++ {
+	// 			toZone := GetZoneFromRowCol(backRow, col)
+	// 			if toZone != 0 && !seen[toZone] {
+	// 				seen[toZone] = true
+	// 				transitions = append(transitions, createTransition(from, toZone))
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	return transitions
 }
@@ -357,7 +357,7 @@ type AttackingDirection int
 
 const (
 	AttackingEast AttackingDirection = iota // Attacking toward East end (Row 4)
-	AttackingWest                            // Attacking toward West end (Row 1)
+	AttackingWest                           // Attacking toward West end (Row 1)
 )
 
 // GetShotThreat returns the base goal probability for shots from this zone (0.0-1.0).

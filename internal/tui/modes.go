@@ -28,9 +28,8 @@ type AppModel struct {
 
 func NewModel() AppModel {
 	// For now, hardcode Manchester City vs Arsenal until manager mode is implemented
-	mci := domain.GetClubByName("Manchester City")
-	ars := domain.GetClubByName("Arsenal")
-	season := domain.NewSeason([]*domain.Club{mci, ars})
+	clubs := domain.GetAllClubs()
+	season := domain.NewSeason(clubs)
 	season.GenerateGameweeks()
 
 	// Get the first fixture and create a match from it

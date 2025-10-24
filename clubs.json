@@ -1,0 +1,78 @@
+[
+  {
+    "Name": "Arsenal",
+    "Strength": 20,
+    "Background": "#DB0007",
+    "Foreground": "#FFFFFF",
+    "Players": [
+      {"Name": "Raya", "Quality": 18},
+      {"Name": "Timber", "Quality": 17},
+      {"Name": "Saliba", "Quality": 18},
+      {"Name": "Gabriel", "Quality": 18},
+      {"Name": "Calafiori", "Quality": 17},
+      {"Name": "Zubimendi", "Quality": 18},
+      {"Name": "Rice", "Quality": 19},
+      {"Name": "Ødegaard", "Quality": 18},
+      {"Name": "Saka", "Quality": 19},
+      {"Name": "Gyokeres", "Quality": 17},
+      {"Name": "Trossard", "Quality": 17}
+    ]
+  },
+  {
+    "Name": "Liverpool",
+    "Strength": 19,
+    "Background": "#C8102E",
+    "Foreground": "#FFFFFF",
+    "Players": [
+      {"Name": "Alisson", "Quality": 19},
+      {"Name": "Alexander-Arnold", "Quality": 18},
+      {"Name": "Van Dijk", "Quality": 19},
+      {"Name": "Konaté", "Quality": 17},
+      {"Name": "Robertson", "Quality": 17},
+      {"Name": "Mac Allister", "Quality": 18},
+      {"Name": "Gravenberch", "Quality": 17},
+      {"Name": "Szoboszlai", "Quality": 17},
+      {"Name": "Salah", "Quality": 19},
+      {"Name": "Núñez", "Quality": 16},
+      {"Name": "Díaz", "Quality": 17}
+    ]
+  },
+  {
+    "Name": "Manchester City",
+    "Strength": 19,
+    "Background": "#6CABDD",
+    "Foreground": "#1C2C5B",
+    "Players": [
+      {"Name": "Donnarumma", "Quality": 18},
+      {"Name": "Lewis", "Quality": 15},
+      {"Name": "Stones", "Quality": 17},
+      {"Name": "Ruben Dias", "Quality": 18},
+      {"Name": "Gvardiol", "Quality": 17},
+      {"Name": "González", "Quality": 18},
+      {"Name": "M. Nunes", "Quality": 17},
+      {"Name": "B. Silva", "Quality": 15},
+      {"Name": "Savinho", "Quality": 18},
+      {"Name": "Haaland", "Quality": 19},
+      {"Name": "Doku", "Quality": 16}
+    ]
+  },
+  {
+    "Name": "Chelsea",
+    "Strength": 17,
+    "Background": "#034694",
+    "Foreground": "#FFFFFF",
+    "Players": [
+      {"Name": "Sánchez", "Quality": 16},
+      {"Name": "James", "Quality": 17},
+      {"Name": "Fofana", "Quality": 16},
+      {"Name": "Colwill", "Quality": 16},
+      {"Name": "Cucurella", "Quality": 16},
+      {"Name": "Caicedo", "Quality": 17},
+      {"Name": "Enzo", "Quality": 17},
+      {"Name": "Palmer", "Quality": 18},
+      {"Name": "Madueke", "Quality": 16},
+      {"Name": "Jackson", "Quality": 16},
+      {"Name": "Nkunku", "Quality": 17}
+    ]
+  }
+]
