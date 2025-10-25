@@ -154,6 +154,7 @@ func (e *Engine) AttemptShot(powerDiff int) int {
 
 // PlayPhase simulates one phase of play (roughly one minute)
 func (e *Engine) PlayPhase() domain.PhaseResult {
+	phaseResult := domain.PhaseResult{}
 	homeRoll := rand.IntN(20)
 	awayRoll := rand.IntN(20)
 
@@ -184,7 +185,7 @@ func (e *Engine) PlayPhase() domain.PhaseResult {
 			e.Match.ActiveZone = defensiveMoves[rand.IntN(len(defensiveMoves))].To
 		}
 
-		return domain.PhaseResult{
+		phaseResult = domain.PhaseResult{
 			HomeRoll:       homeRoll,
 			AwayRoll:       awayRoll,
 			HomePhasePower: homePhasePower,
@@ -208,7 +209,7 @@ func (e *Engine) PlayPhase() domain.PhaseResult {
 		}
 	}
 
-	return domain.PhaseResult{
+	phaseResult = domain.PhaseResult{
 		HomeRoll:       homeRoll,
 		AwayRoll:       awayRoll,
 		HomePhasePower: homePhasePower,
@@ -216,4 +217,8 @@ func (e *Engine) PlayPhase() domain.PhaseResult {
 		HomeGoals:      homeGoals,
 		AwayGoals:      awayGoals,
 	}
+
+	e.Match.ApplyPhaseResult(&phaseResult)
+
+	return phaseResult
 }

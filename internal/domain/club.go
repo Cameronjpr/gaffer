@@ -1,108 +1,148 @@
 package domain
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
-	"io"
-	"os"
+
+	"github.com/cameronjpr/gaffer/internal/db"
 )
 
 // Club represents a football club with permanent attributes
 type Club struct {
+	ID         int64
 	Name       string
 	Strength   int // out of 20
 	Background string
 	Foreground string
-	Players    []Player
 }
 
-var Clubs = []Club{
-	{
-		Name:       "Arsenal",
-		Strength:   20,
-		Background: "#DB0007",
-		Foreground: "#FFFFFF",
-		Players: []Player{
-			{Name: "Raya", Quality: 18},
-			{Name: "Timber", Quality: 17},
-			{Name: "Saliba", Quality: 18},
-			{Name: "Gabriel", Quality: 18},
-			{Name: "Calafiori", Quality: 17},
-			{Name: "Zubimendi", Quality: 18},
-			{Name: "Rice", Quality: 19},
-			{Name: "Ødegaard", Quality: 18},
-			{Name: "Saka", Quality: 19},
-			{Name: "Gyokeres", Quality: 17},
-			{Name: "Trossard", Quality: 17},
-		},
-	},
-	{
-		Name:       "Manchester City",
-		Strength:   19,
-		Background: "#6CABDD",
-		Foreground: "#1C2C5B",
-		Players: []Player{
-			{Name: "Donnarumma", Quality: 18},
-			{Name: "Lewis", Quality: 15},
-			{Name: "Stones", Quality: 17},
-			{Name: "Ruben Dias", Quality: 18},
-			{Name: "Gvardiol", Quality: 17},
-			{Name: "González", Quality: 18},
-			{Name: "M. Nunes", Quality: 17},
-			{Name: "B. Silva", Quality: 15},
-			{Name: "Savinho", Quality: 18},
-			{Name: "Haaland", Quality: 19},
-			{Name: "Doku", Quality: 16},
-		},
-	},
+// ClubWithPlayers is a view model for when you need club + players together
+type ClubWithPlayers struct {
+	Club    *Club
+	Players []Player
 }
 
-func GetAllClubs() []*Club {
-	jsonFile, err := os.Open("clubs.json")
+// dbClubToDomain converts a database club to a domain Club
+func dbClubToDomain(dbClub db.Club) *Club {
+	return &Club{
+		ID:         dbClub.ID,
+		Name:       dbClub.Name,
+		Strength:   int(dbClub.Strength),
+		Background: dbClub.BackgroundColor,
+		Foreground: dbClub.ForegroundColor,
+	}
+}
 
+// GetAllClubs fetches all clubs from the database
+func GetAllClubs(queries *db.Queries) ([]*Club, error) {
+	ctx := context.Background()
+
+	dbClubs, err := queries.GetAllClubs(ctx)
 	if err != nil {
-		fmt.Println(err)
-		return nil
+		return nil, fmt.Errorf("failed to get clubs: %w", err)
 	}
 
-	var clubs []*Club
-
-	byteValue, _ := io.ReadAll(jsonFile)
-	json.Unmarshal(byteValue, &clubs)
-
-	defer jsonFile.Close()
-
-	return clubs
-}
-
-// GetClubByName returns a pointer to a club by name, or nil if not found
-func GetClubByName(name string) *Club {
-	jsonFile, err := os.Open("clubs.json")
-
-	if err != nil {
-		fmt.Println(err)
-		return nil
+	clubs := make([]*Club, len(dbClubs))
+	for i, dbClub := range dbClubs {
+		clubs[i] = dbClubToDomain(dbClub)
 	}
 
-	var clubs []*Club
+	return clubs, nil
+}
 
-	byteValue, _ := io.ReadAll(jsonFile)
-	json.Unmarshal(byteValue, &clubs)
+// GetAllClubsWithPlayers fetches all clubs with their players from the database
+func GetAllClubsWithPlayers(queries *db.Queries) ([]*ClubWithPlayers, error) {
+	ctx := context.Background()
 
-	for i := range clubs {
-		if clubs[i].Name == name {
-			return clubs[i]
+	dbClubs, err := queries.GetAllClubs(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get clubs: %w", err)
+	}
+
+	clubsWithPlayers := make([]*ClubWithPlayers, len(dbClubs))
+	for i, dbClub := range dbClubs {
+		dbPlayers, err := queries.GetPlayersByClubID(ctx, dbClub.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get players for club %s: %w", dbClub.Name, err)
+		}
+
+		players := make([]Player, len(dbPlayers))
+		for j, p := range dbPlayers {
+			players[j] = Player{
+				Name:    p.Name,
+				Quality: int(p.Quality),
+			}
+		}
+
+		clubsWithPlayers[i] = &ClubWithPlayers{
+			Club:    dbClubToDomain(dbClub),
+			Players: players,
 		}
 	}
 
-	defer jsonFile.Close()
-
-	return nil
+	return clubsWithPlayers, nil
 }
 
-func (c *Club) GetSquad() string {
+// GetClubByName returns a club by name from the database
+func GetClubByName(queries *db.Queries, name string) (*Club, error) {
+	ctx := context.Background()
+
+	dbClub, err := queries.GetClubByName(ctx, name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get club %s: %w", name, err)
+	}
+
+	return dbClubToDomain(dbClub), nil
+}
+
+// GetClubWithPlayers returns a club with its players from the database
+func GetClubWithPlayers(queries *db.Queries, clubID int64) (*ClubWithPlayers, error) {
+	ctx := context.Background()
+
+	dbClub, err := queries.GetClubByID(ctx, clubID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get club: %w", err)
+	}
+
+	dbPlayers, err := queries.GetPlayersByClubID(ctx, clubID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get players: %w", err)
+	}
+
+	players := make([]Player, len(dbPlayers))
+	for i, p := range dbPlayers {
+		players[i] = Player{
+			Name:    p.Name,
+			Quality: int(p.Quality),
+		}
+	}
+
+	return &ClubWithPlayers{
+		Club:    dbClubToDomain(dbClub),
+		Players: players,
+	}, nil
+}
+
+// GetSquad returns a formatted string of the club's squad
+func (c *Club) GetSquad(queries *db.Queries) (string, error) {
+	ctx := context.Background()
+
+	dbPlayers, err := queries.GetPlayersByClubID(ctx, c.ID)
+	if err != nil {
+		return "", fmt.Errorf("failed to get players: %w", err)
+	}
+
 	lineup := ""
-	for _, player := range c.Players {
+	for _, player := range dbPlayers {
+		lineup += fmt.Sprintf("%s (Q:%d)\n", player.Name, player.Quality)
+	}
+	return lineup, nil
+}
+
+// GetSquad returns a formatted string of the squad (for ClubWithPlayers)
+func (cwp *ClubWithPlayers) GetSquad() string {
+	lineup := ""
+	for _, player := range cwp.Players {
 		lineup += fmt.Sprintf("%s (Q:%d)\n", player.Name, player.Quality)
 	}
 	return lineup

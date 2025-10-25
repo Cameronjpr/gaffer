@@ -10,6 +10,7 @@ import (
 type MatchPlayerParticipant struct {
 	Player   *Player
 	Position string
+	Stamina  int
 }
 
 // MatchParticipant represents a club participating in a specific match
@@ -20,17 +21,17 @@ type MatchParticipant struct {
 	Score     int
 }
 
-// NewMatchParticipant creates a new match participant from a club
-func NewMatchParticipant(club *Club) *MatchParticipant {
+// NewMatchParticipant creates a new match participant from a club and its players
+func NewMatchParticipant(club *Club, players []Player) *MatchParticipant {
 	// Assign players to 4-3-3 formation positions
 	// Positions: GK, RB, CB, CB, LB, CM, CM, CM, RW, ST, LW
 	positions := []string{"GK", "RB", "CB", "CB", "LB", "CM", "CM", "CM", "RW", "ST", "LW"}
 
-	matchPlayers := make([]MatchPlayerParticipant, 0, len(club.Players))
-	for i := range club.Players {
+	matchPlayers := make([]MatchPlayerParticipant, 0, len(players))
+	for i := range players {
 		if i < len(positions) {
 			matchPlayers = append(matchPlayers, MatchPlayerParticipant{
-				Player:   &club.Players[i],
+				Player:   &players[i],
 				Position: positions[i],
 			})
 		}
@@ -131,4 +132,26 @@ func (p *MatchParticipant) GetLineup(match *Match) string {
 		lineup += row
 	}
 	return lineup
+}
+
+func (p *MatchParticipant) DrainStamina(hasPossession bool) {
+	amount := 1
+	if !hasPossession {
+		amount = 2
+	}
+	for _, player := range p.Players {
+		player.DrainStamina(amount)
+	}
+
+}
+
+func (p *MatchPlayerParticipant) GetStamina() int {
+	return p.Stamina
+}
+
+func (p *MatchPlayerParticipant) DrainStamina(amount int) {
+	p.Stamina -= amount
+	if p.Stamina < 0 {
+		p.Stamina = 0
+	}
 }

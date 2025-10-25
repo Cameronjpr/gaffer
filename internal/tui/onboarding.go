@@ -1,29 +1,11 @@
 package tui
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/cameronjpr/gaffer/internal/domain"
-	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 )
-
-type menuKeyMap struct {
-	Exit     key.Binding
-	formKeys *huh.KeyMap
-}
-
-func defaultMenuKeyMap() *menuKeyMap {
-	keys := &menuKeyMap{
-		Exit:     key.NewBinding(key.WithKeys("esc"), key.WithHelp("escape", "exit")),
-		formKeys: huh.NewDefaultKeyMap(),
-	}
-	keys.formKeys.Quit.SetEnabled(false)
-	return keys
-}
 
 type OnboardingModel struct {
 	form     *huh.Form
@@ -37,14 +19,14 @@ type OnboardingFormData struct {
 	ClubName string
 }
 
-func NewOnboardingModel(season *domain.Season) OnboardingModel {
+func NewOnboardingModel(season *domain.Season) *OnboardingModel {
 	formData := &OnboardingFormData{}
 	keys := defaultMenuKeyMap()
 
 	// Build club options from season
 	clubOptions := make([]huh.Option[string], len(season.Clubs))
 	for i, club := range season.Clubs {
-		clubOptions[i] = huh.NewOption(club.Name, club.Name)
+		clubOptions[i] = huh.NewOption(club.Club.Name, club.Club.Name)
 	}
 
 	form := huh.NewForm(
@@ -56,18 +38,18 @@ func NewOnboardingModel(season *domain.Season) OnboardingModel {
 		),
 	).WithWidth(60).WithKeyMap(keys.formKeys)
 
-	return OnboardingModel{
+	return &OnboardingModel{
 		formData: formData,
 		form:     form,
 		keys:     keys,
 	}
 }
 
-func (m OnboardingModel) Init() tea.Cmd {
+func (m *OnboardingModel) Init() tea.Cmd {
 	return m.form.Init()
 }
 
-func (m OnboardingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *OnboardingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -104,17 +86,9 @@ func (m OnboardingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m OnboardingModel) View() string {
+func (m *OnboardingModel) View() string {
 	output := lipgloss.JoinVertical(lipgloss.Center,
 		m.form.View(),
 	)
 	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, output)
-}
-
-func main() {
-	_, err := tea.NewProgram(NewModel()).Run()
-	if err != nil {
-		fmt.Println("Oh no:", err)
-		os.Exit(1)
-	}
 }

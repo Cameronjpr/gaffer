@@ -17,19 +17,19 @@ type MatchModel struct {
 	height   int
 }
 
-func NewMatchModel(match *domain.Match) MatchModel {
-	return MatchModel{
+func NewMatchModel(match *domain.Match) *MatchModel {
+	return &MatchModel{
 		match:    match,
 		engine:   simulation.NewEngine(match),
 		isPaused: false,
 	}
 }
 
-func (m MatchModel) Init() tea.Cmd {
+func (m *MatchModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
@@ -60,11 +60,6 @@ func (m MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Auto-advance to next phase
 		result := m.engine.PlayPhase()
-
-		// Update match state
-		m.match.Home.Score += result.HomeGoals
-		m.match.Away.Score += result.AwayGoals
-		m.match.CurrentMinute++
 		m.match.PhaseHistory = append(m.match.PhaseHistory, result)
 
 		if m.match.IsHalfTime() {
@@ -130,7 +125,7 @@ func buildTimelineFromEvents(homeEvents, awayEvents []domain.Event, colWidth int
 		Render(timelineContent)
 }
 
-func (m MatchModel) View() string {
+func (m *MatchModel) View() string {
 	// Footer - generate commentary on-demand from latest event
 	footer := ""
 	if !m.match.IsHalfTime() && !m.match.IsFullTime() && len(m.match.Events) > 0 {

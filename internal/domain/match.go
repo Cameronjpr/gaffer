@@ -31,8 +31,9 @@ type Match struct {
 }
 
 func NewMatchFromFixture(f *Fixture) *Match {
-	home := NewMatchParticipant(f.HomeTeam)
-	away := NewMatchParticipant(f.AwayTeam)
+	home := NewMatchParticipant(f.HomeTeam.Club, f.HomeTeam.Players)
+	away := NewMatchParticipant(f.AwayTeam.Club, f.AwayTeam.Players)
+
 	return &Match{
 		ForFixture:             f,
 		Home:                   home,
@@ -150,6 +151,23 @@ func (m *Match) GetScore() (int, int) {
 	}
 
 	return homeScore, awayScore
+}
+
+func (m *Match) ApplyPhaseResult(result *PhaseResult) {
+	// Update score
+	m.Home.Score += result.HomeGoals
+	m.Away.Score += result.AwayGoals
+
+	if result.HomeGoals > 0 || result.AwayGoals > 0 {
+		m.ActiveZone = WestMidCentre // TODO: Set zone to the "centre" of the half belonging to the team that just conceded
+	}
+
+	// Drain stamina for both teams
+	m.Home.DrainStamina(m.TeamInPossession == m.Home)
+	m.Away.DrainStamina(m.TeamInPossession == m.Away)
+
+	// Advance time
+	m.CurrentMinute++
 }
 
 func (m *Match) GetWinner() *Club {

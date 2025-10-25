@@ -14,11 +14,11 @@ type Gameweek struct {
 type Season struct {
 	ID        int
 	Name      string
-	Clubs     []*Club
+	Clubs     []*ClubWithPlayers
 	Gameweeks []*Gameweek
 }
 
-func NewSeason(clubs []*Club) *Season {
+func NewSeason(clubs []*ClubWithPlayers) *Season {
 	season := Season{
 		ID:        1,
 		Name:      "2025/26",
@@ -62,7 +62,7 @@ func (s *Season) GenerateGameweeks() {
 	}
 }
 
-func generateAllFixtures(clubs []*Club) []*Fixture {
+func generateAllFixtures(clubs []*ClubWithPlayers) []*Fixture {
 	var fixtures []*Fixture
 	fixtureID := 1
 
@@ -92,7 +92,7 @@ func (s *Season) GetLeagueTable() LeagueTable {
 	}
 
 	for _, club := range s.Clubs {
-		fixtures := s.GetFixturesForClub(club)
+		fixtures := s.GetFixturesForClub(club.Club)
 
 		var points int
 		for _, fixture := range fixtures {
@@ -104,13 +104,13 @@ func (s *Season) GetLeagueTable() LeagueTable {
 			winner := fixture.Result.GetWinner()
 			if winner == nil {
 				points += 1 // Draw
-			} else if winner == club {
+			} else if winner == club.Club {
 				points += 3 // Win
 			}
 		}
 
 		position := LeaguePosition{
-			Club:   club,
+			Club:   club.Club,
 			Points: points,
 		}
 		table.Positions = append(table.Positions, position)
@@ -125,7 +125,7 @@ func (s *Season) GetFixturesForClub(club *Club) []*Fixture {
 	var fixtures []*Fixture
 	for _, gameweek := range s.Gameweeks {
 		for _, fixture := range gameweek.Fixtures {
-			if fixture.HomeTeam == club || fixture.AwayTeam == club {
+			if fixture.HomeTeam.Club == club || fixture.AwayTeam.Club == club {
 				fixtures = append(fixtures, fixture)
 			}
 		}

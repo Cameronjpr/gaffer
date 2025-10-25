@@ -9,11 +9,11 @@ import (
 
 type tickMsg time.Time
 
-func (m AppModel) Init() tea.Cmd {
+func (m *AppModel) Init() tea.Cmd {
 	return tick()
 }
 
-func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
@@ -28,17 +28,17 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case goToOnboardingMsg:
 		m.mode = OnboardingMode
 		// Send WindowSizeMsg to newly activated model
-		sizeMsg := tea.WindowSizeMsg{Width: m.width, Height: m.height}
-		newOnboarding, cmd := m.onboarding.Update(sizeMsg)
-		m.onboarding = newOnboarding.(OnboardingModel)
-		return m, tea.Batch(cmd, tick())
+		m.onboarding.width = m.width
+		m.onboarding.height = m.height
+
+		return m, tick()
 
 	case goToManagerHubMsg:
 		m.mode = ManagerHubMode
 		var club *domain.Club
 		for _, c := range m.season.Clubs {
-			if c.Name == msg.ClubName {
-				club = c
+			if c.Club.Name == msg.ClubName {
+				club = c.Club
 				break
 			}
 		}
@@ -89,27 +89,27 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case MenuMode:
 		var newMenu tea.Model
 		newMenu, cmd = m.menu.Update(msg)
-		m.menu = newMenu.(MenuModel)
+		m.menu = newMenu.(*MenuModel)
 
 	case OnboardingMode:
 		var newOnboarding tea.Model
 		newOnboarding, cmd = m.onboarding.Update(msg)
-		m.onboarding = newOnboarding.(OnboardingModel)
+		m.onboarding = newOnboarding.(*OnboardingModel)
 
 	case ManagerHubMode:
 		var newManagerHub tea.Model
 		newManagerHub, cmd = m.managerHub.Update(msg)
-		m.managerHub = newManagerHub.(ManagerHubModel)
+		m.managerHub = newManagerHub.(*ManagerHubModel)
 
 	case PreMatchMode:
 		var newPrematch tea.Model
 		newPrematch, cmd = m.prematch.Update(msg)
-		m.prematch = newPrematch.(PreMatchModel)
+		m.prematch = newPrematch.(*PreMatchModel)
 
 	case MatchMode:
 		var newMatch tea.Model
 		newMatch, cmd = m.match.Update(msg)
-		m.match = newMatch.(MatchModel)
+		m.match = newMatch.(*MatchModel)
 
 		// Check if match is complete
 		if m.match.match.IsFullTime() {
@@ -121,7 +121,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m AppModel) View() string {
+func (m *AppModel) View() string {
 	switch m.mode {
 	case MenuMode:
 		return m.menu.View()

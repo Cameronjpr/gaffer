@@ -16,13 +16,12 @@ func TestGoalAverageOverMultipleMatches(t *testing.T) {
 
 	totalGoals := 0
 
-	// Get two evenly-matched clubs for consistent testing
-	homeClub := domain.GetClubByName("Arsenal")
-	awayClub := domain.GetClubByName("Manchester City")
+	// Setup test database
+	testDB, queries := setupTestDB(t)
+	defer testDB.Close()
 
-	if homeClub == nil || awayClub == nil {
-		t.Fatal("Test clubs not found")
-	}
+	// Get two evenly-matched clubs for consistent testing
+	homeClub, awayClub := getTestClubs(t, queries)
 
 	for i := 0; i < numMatches; i++ {
 		// Create a fresh match
@@ -84,13 +83,12 @@ func TestShotAverageOverMultipleMatches(t *testing.T) {
 
 	totalShots := 0
 
-	// Get two evenly-matched clubs for consistent testing
-	homeClub := domain.GetClubByName("Arsenal")
-	awayClub := domain.GetClubByName("Manchester City")
+	// Setup test database
+	testDB, queries := setupTestDB(t)
+	defer testDB.Close()
 
-	if homeClub == nil || awayClub == nil {
-		t.Fatal("Test clubs not found")
-	}
+	// Get two evenly-matched clubs for consistent testing
+	homeClub, awayClub := getTestClubs(t, queries)
 
 	for i := 0; i < numMatches; i++ {
 		// Create a fresh match
@@ -145,12 +143,11 @@ func TestShotAverageOverMultipleMatches(t *testing.T) {
 // TestSimulationDeterminism verifies that matches are non-deterministic.
 // Two identical setups should produce different results (sanity check for RNG).
 func TestSimulationDeterminism(t *testing.T) {
-	homeClub := domain.GetClubByName("Arsenal")
-	awayClub := domain.GetClubByName("Manchester City")
+	// Setup test database
+	testDB, queries := setupTestDB(t)
+	defer testDB.Close()
 
-	if homeClub == nil || awayClub == nil {
-		t.Fatal("Test clubs not found")
-	}
+	homeClub, awayClub := getTestClubs(t, queries)
 
 	// Run two matches with identical setup
 	scores := make([][2]int, 2)
@@ -185,12 +182,11 @@ func TestSimulationDeterminism(t *testing.T) {
 func TestShotDistribution(t *testing.T) {
 	const numMatches = 100
 
-	homeClub := domain.GetClubByName("Arsenal")
-	awayClub := domain.GetClubByName("Manchester City")
+	// Setup test database
+	testDB, queries := setupTestDB(t)
+	defer testDB.Close()
 
-	if homeClub == nil || awayClub == nil {
-		t.Fatal("Test clubs not found")
-	}
+	homeClub, awayClub := getTestClubs(t, queries)
 
 	shotsByZone := make(map[domain.PitchZone]int)
 	totalShots := 0
@@ -281,12 +277,11 @@ func TestShotDistribution(t *testing.T) {
 
 // TestSimulationBasicSanity verifies a single match produces sensible results
 func TestSimulationBasicSanity(t *testing.T) {
-	homeClub := domain.GetClubByName("Arsenal")
-	awayClub := domain.GetClubByName("Manchester City")
+	// Setup test database
+	testDB, queries := setupTestDB(t)
+	defer testDB.Close()
 
-	if homeClub == nil || awayClub == nil {
-		t.Fatal("Test clubs not found")
-	}
+	homeClub, awayClub := getTestClubs(t, queries)
 
 	fixture := &domain.Fixture{HomeTeam: homeClub, AwayTeam: awayClub}
 	match := domain.NewMatchFromFixture(fixture)
@@ -344,12 +339,11 @@ func TestStrongerTeamsPenetrateMore(t *testing.T) {
 	// We'll test this by looking at where teams shoot from
 	// Stronger teams should shoot from more dangerous zones on average
 
-	homeClub := domain.GetClubByName("Arsenal")         // Strength 20
-	awayClub := domain.GetClubByName("Manchester City") // Strength 19
+	// Setup test database
+	testDB, queries := setupTestDB(t)
+	defer testDB.Close()
 
-	if homeClub == nil || awayClub == nil {
-		t.Fatal("Test clubs not found")
-	}
+	homeClub, awayClub := getTestClubs(t, queries) // Arsenal Strength 20, City Strength 19
 
 	const numMatches = 50
 

@@ -15,18 +15,18 @@ type ManagerHubModel struct {
 	height     int
 }
 
-func NewManagerHubModel(season *domain.Season, club *domain.Club) ManagerHubModel {
-	return ManagerHubModel{
+func NewManagerHubModel(season *domain.Season, club *domain.Club) *ManagerHubModel {
+	return &ManagerHubModel{
 		ChosenClub: club,
 		Season:     season,
 	}
 }
 
-func (m ManagerHubModel) Init() tea.Cmd {
+func (m *ManagerHubModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m ManagerHubModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *ManagerHubModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -45,7 +45,7 @@ func (m ManagerHubModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m ManagerHubModel) View() string {
+func (m *ManagerHubModel) View() string {
 	if m.ChosenClub == nil {
 		panic("ChosenClub is nil, cannot proceed")
 	}
@@ -82,7 +82,7 @@ func (m ManagerHubModel) View() string {
 			if fixture.Result != nil {
 				status = fmt.Sprintf(" %d-%d", fixture.Result.Home.Score, fixture.Result.Away.Score)
 			}
-			fixturesStr += fmt.Sprintf("%s vs %s%s\n", fixture.HomeTeam.Name, fixture.AwayTeam.Name, status)
+			fixturesStr += fmt.Sprintf("%s vs %s%s\n", fixture.HomeTeam.Club.Name, fixture.AwayTeam.Club.Name, status)
 		}
 	}
 

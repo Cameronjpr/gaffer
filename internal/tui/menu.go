@@ -15,7 +15,7 @@ type MenuModel struct {
 	list   list.Model
 }
 
-func NewMenuModel(items []list.Item) MenuModel {
+func NewMenuModel(items []list.Item) *MenuModel {
 	delegate := itemDelegate{}
 	l := list.New(items, delegate, 0, 0)
 	l.SetShowTitle(false)
@@ -23,16 +23,16 @@ func NewMenuModel(items []list.Item) MenuModel {
 	l.SetShowHelp(false)
 	l.SetFilteringEnabled(false)
 
-	return MenuModel{
+	return &MenuModel{
 		list: l,
 	}
 }
 
-func (m MenuModel) Init() tea.Cmd {
+func (m *MenuModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -65,7 +65,7 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m MenuModel) View() string {
+func (m *MenuModel) View() string {
 	title := lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color("170")).

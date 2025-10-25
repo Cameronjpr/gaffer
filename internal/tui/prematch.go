@@ -5,30 +5,58 @@ import (
 
 	"github.com/cameronjpr/gaffer/internal/domain"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type PreMatchModel struct {
-	match  *domain.Match
-	width  int
-	height int
+	form     *huh.Form
+	formData *OnboardingFormData
+	keys     *menuKeyMap
+	match    *domain.Match
+	width    int
+	height   int
 }
 
-func NewPreMatchModel(match *domain.Match) PreMatchModel {
-	return PreMatchModel{
-		match: match,
+func NewPreMatchModel(match *domain.Match) *PreMatchModel {
+
+	formData := &OnboardingFormData{}
+	keys := defaultMenuKeyMap()
+
+	// Build club options from season
+	formationOptions := []huh.Option[string]{
+		{Key: "4-4-2", Value: "4-4-2"},
+		{Key: "4-3-3", Value: "4-3-3"},
+	}
+
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Value(&formData.ClubName).
+				Title("Choose your formation:").
+				Options(formationOptions...),
+		),
+	).WithWidth(60).WithKeyMap(keys.formKeys)
+
+	return &PreMatchModel{
+		match:    match,
+		form:     form,
+		formData: formData,
+		keys:     keys,
 	}
 }
 
-func (m PreMatchModel) Init() tea.Cmd {
-	return nil
+func (m *PreMatchModel) Init() tea.Cmd {
+	return m.form.Init()
 }
 
-func (m PreMatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *PreMatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
+		formWidth := min(60, msg.Width-4)
+		m.form = m.form.WithWidth(formWidth)
 		return m, nil
 
 	case tea.KeyMsg:
@@ -40,10 +68,26 @@ func (m PreMatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	return m, nil
+	var cmds []tea.Cmd
+
+	form, cmd := m.form.Update(msg)
+	if f, ok := form.(*huh.Form); ok {
+		m.form = f
+		cmds = append(cmds, cmd)
+	}
+
+	if m.form.State == huh.StateCompleted {
+		cmds = append(cmds, func() tea.Msg {
+			return goToManagerHubMsg{
+				ClubName: m.formData.ClubName,
+			}
+		})
+	}
+
+	return m, tea.Batch(cmds...)
 }
 
-func (m PreMatchModel) View() string {
+func (m *PreMatchModel) View() string {
 	// Calculate column width
 	colWidth := m.width / 3
 
@@ -57,7 +101,10 @@ func (m PreMatchModel) View() string {
 	)
 
 	// Match info section
-	matchContent := fmt.Sprintf("%s vs %s\n\nPress Enter to start", m.match.Home.Club.Name, m.match.Away.Club.Name)
+	matchContent := lipgloss.JoinVertical(lipgloss.Center,
+		fmt.Sprintf("%s vs %s\n\nPress Enter to start", m.match.Home.Club.Name, m.match.Away.Club.Name),
+		m.form.View(),
+	)
 
 	// Away team section
 	awayContent := lipgloss.JoinVertical(

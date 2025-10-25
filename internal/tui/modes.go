@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"github.com/cameronjpr/gaffer/internal/db"
 	"github.com/cameronjpr/gaffer/internal/domain"
 	"github.com/charmbracelet/bubbles/list"
 )
@@ -16,21 +17,26 @@ const (
 )
 
 type AppModel struct {
+	queries      *db.Queries
 	mode         Mode
 	season       *domain.Season
 	currentMatch *domain.Match
-	menu         MenuModel
-	onboarding   OnboardingModel
-	managerHub   ManagerHubModel
-	prematch     PreMatchModel
-	match        MatchModel
+	menu         *MenuModel
+	onboarding   *OnboardingModel
+	managerHub   *ManagerHubModel
+	prematch     *PreMatchModel
+	match        *MatchModel
 	width        int
 	height       int
 }
 
-func NewModel() AppModel {
-	// For now, hardcode Manchester City vs Arsenal until manager mode is implemented
-	clubs := domain.GetAllClubs()
+func NewModel(queries *db.Queries) *AppModel {
+	// Get all clubs with players from database
+	clubs, err := domain.GetAllClubsWithPlayers(queries)
+	if err != nil {
+		panic(err)
+	}
+
 	season := domain.NewSeason(clubs)
 	season.GenerateGameweeks()
 
@@ -42,7 +48,8 @@ func NewModel() AppModel {
 	}
 	currentMatch := domain.NewMatchFromFixture(nextFixture)
 
-	return AppModel{
+	return &AppModel{
+		queries:      queries,
 		mode:         MenuMode,
 		season:       season,
 		currentMatch: currentMatch,
