@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 
+	"github.com/cameronjpr/gaffer/internal/components"
 	"github.com/cameronjpr/gaffer/internal/domain"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
@@ -92,35 +93,22 @@ func (m *PreMatchModel) View() string {
 	colWidth := m.width / 3
 
 	// Home team section
-	homeContent := lipgloss.JoinVertical(
-		lipgloss.Left,
-		lipgloss.NewStyle().Bold(true).Render(m.match.Home.Club.Name),
-		lipgloss.NewStyle().Italic(true).Render(m.match.Home.Formation),
-		"",
-		m.match.Home.GetLineup(nil),
-	)
 
 	// Match info section
 	matchContent := lipgloss.JoinVertical(lipgloss.Center,
 		fmt.Sprintf("%s vs %s\n\nPress Enter to start", m.match.Home.Club.Name, m.match.Away.Club.Name),
-		m.form.View(),
+		// m.form.View(),
 	)
 
-	// Away team section
-	awayContent := lipgloss.JoinVertical(
-		lipgloss.Left,
-		lipgloss.NewStyle().Bold(true).Render(m.match.Away.Club.Name),
-		lipgloss.NewStyle().Italic(true).Render(m.match.Away.Formation),
-		"",
-		m.match.Away.GetLineup(nil),
-	)
+	homeTeamSheet := components.TeamSheet(m.match.Home)
+	awayTeamSheet := components.TeamSheet(m.match.Away)
 
 	// Create 3-column layout
 	layout := lipgloss.JoinHorizontal(
 		lipgloss.Top,
-		lipgloss.Place(colWidth, m.height, lipgloss.Center, lipgloss.Center, homeContent),
+		lipgloss.Place(colWidth, m.height, lipgloss.Center, lipgloss.Center, homeTeamSheet),
 		lipgloss.Place(colWidth, m.height, lipgloss.Center, lipgloss.Center, matchContent),
-		lipgloss.Place(colWidth, m.height, lipgloss.Center, lipgloss.Center, awayContent),
+		lipgloss.Place(colWidth, m.height, lipgloss.Center, lipgloss.Center, awayTeamSheet),
 	)
 
 	return layout

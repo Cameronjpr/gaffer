@@ -38,7 +38,7 @@ func TestGoalAverageOverMultipleMatches(t *testing.T) {
 				match.StartSecondHalf()
 			}
 
-			engine.PlayPhase()
+			engine.SimulateMinute()
 		}
 
 		homeScore, awayScore := match.GetScore()
@@ -105,7 +105,7 @@ func TestShotAverageOverMultipleMatches(t *testing.T) {
 				match.StartSecondHalf()
 			}
 
-			engine.PlayPhase()
+			engine.SimulateMinute()
 		}
 
 		// Count shots (saved, missed, and goals)
@@ -161,7 +161,7 @@ func TestSimulationDeterminism(t *testing.T) {
 			if minute == 46 {
 				match.StartSecondHalf()
 			}
-			engine.PlayPhase()
+			engine.SimulateMinute()
 		}
 
 		homeScore, awayScore := match.GetScore()
@@ -204,7 +204,7 @@ func TestShotDistribution(t *testing.T) {
 
 			// Track zone before PlayPhase (zone when shot was taken)
 			zoneBeforePhase := match.ActiveZone
-			engine.PlayPhase()
+			engine.SimulateMinute()
 
 			// Check if a shot event was generated in this phase
 			if len(match.Events) > 0 {
@@ -292,7 +292,7 @@ func TestSimulationBasicSanity(t *testing.T) {
 		if minute == 46 {
 			match.StartSecondHalf()
 		}
-		engine.PlayPhase()
+		engine.SimulateMinute()
 	}
 
 	homeScore, awayScore := match.GetScore()
@@ -368,7 +368,7 @@ func TestStrongerTeamsPenetrateMore(t *testing.T) {
 			teamInPossession := match.TeamInPossession
 			eventsBeforePhase := len(match.Events)
 
-			engine.PlayPhase()
+			engine.SimulateMinute()
 
 			// Check if shot was taken
 			if len(match.Events) > eventsBeforePhase {

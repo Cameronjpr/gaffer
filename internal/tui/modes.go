@@ -3,6 +3,7 @@ package tui
 import (
 	"github.com/cameronjpr/gaffer/internal/db"
 	"github.com/cameronjpr/gaffer/internal/domain"
+	"github.com/cameronjpr/gaffer/internal/repository"
 	"github.com/charmbracelet/bubbles/list"
 )
 
@@ -17,7 +18,8 @@ const (
 )
 
 type AppModel struct {
-	queries      *db.Queries
+	clubRepo     domain.ClubRepository
+	fixtureRepo  domain.FixtureRepository
 	mode         Mode
 	season       *domain.Season
 	currentMatch *domain.Match
@@ -31,14 +33,18 @@ type AppModel struct {
 }
 
 func NewModel(queries *db.Queries) *AppModel {
-	// Get all clubs with players from database
-	clubs, err := domain.GetAllClubsWithPlayers(queries)
+	// Create repositories
+	clubRepo := repository.NewClubRepository(queries)
+	fixtureRepo := repository.NewFixtureRepository(queries, clubRepo)
+
+	// Get all clubs with players from repository
+	clubs, err := clubRepo.GetAll()
 	if err != nil {
 		panic(err)
 	}
 
 	season := domain.NewSeason(clubs)
-	season.GenerateGameweeks()
+	season.GenerateAllFixtures()
 
 	// Get the first fixture and create a match from it
 	nextFixture, err := season.GetNextFixture()
@@ -49,7 +55,8 @@ func NewModel(queries *db.Queries) *AppModel {
 	currentMatch := domain.NewMatchFromFixture(nextFixture)
 
 	return &AppModel{
-		queries:      queries,
+		clubRepo:     clubRepo,
+		fixtureRepo:  fixtureRepo,
 		mode:         MenuMode,
 		season:       season,
 		currentMatch: currentMatch,
@@ -58,7 +65,7 @@ func NewModel(queries *db.Queries) *AppModel {
 			item("Settings"),
 		}),
 		onboarding: NewOnboardingModel(season),
-		managerHub: NewManagerHubModel(season, nil),
+		managerHub: NewManagerHubModel(season, nil, nil),
 		prematch:   NewPreMatchModel(currentMatch),
 		match:      NewMatchModel(currentMatch),
 		width:      0,

@@ -10,21 +10,23 @@ import (
 )
 
 const createFixture = `-- name: CreateFixture :one
-INSERT INTO fixtures (home_team_id, away_team_id)
-VALUES (?, ?)
-RETURNING id, home_team_id, away_team_id, created_at
+INSERT INTO fixtures (gameweek, home_team_id, away_team_id)
+VALUES (?, ?, ?)
+RETURNING id, gameweek, home_team_id, away_team_id, created_at
 `
 
 type CreateFixtureParams struct {
+	Gameweek   int64 `json:"gameweek"`
 	HomeTeamID int64 `json:"home_team_id"`
 	AwayTeamID int64 `json:"away_team_id"`
 }
 
 func (q *Queries) CreateFixture(ctx context.Context, arg CreateFixtureParams) (Fixture, error) {
-	row := q.db.QueryRowContext(ctx, createFixture, arg.HomeTeamID, arg.AwayTeamID)
+	row := q.db.QueryRowContext(ctx, createFixture, arg.Gameweek, arg.HomeTeamID, arg.AwayTeamID)
 	var i Fixture
 	err := row.Scan(
 		&i.ID,
+		&i.Gameweek,
 		&i.HomeTeamID,
 		&i.AwayTeamID,
 		&i.CreatedAt,
@@ -42,7 +44,7 @@ func (q *Queries) DeleteFixture(ctx context.Context, id int64) error {
 }
 
 const getAllFixtures = `-- name: GetAllFixtures :many
-SELECT id, home_team_id, away_team_id, created_at FROM fixtures ORDER BY id
+SELECT id, gameweek, home_team_id, away_team_id, created_at FROM fixtures ORDER BY id
 `
 
 func (q *Queries) GetAllFixtures(ctx context.Context) ([]Fixture, error) {
@@ -56,6 +58,7 @@ func (q *Queries) GetAllFixtures(ctx context.Context) ([]Fixture, error) {
 		var i Fixture
 		if err := rows.Scan(
 			&i.ID,
+			&i.Gameweek,
 			&i.HomeTeamID,
 			&i.AwayTeamID,
 			&i.CreatedAt,
@@ -74,7 +77,7 @@ func (q *Queries) GetAllFixtures(ctx context.Context) ([]Fixture, error) {
 }
 
 const getFixtureByID = `-- name: GetFixtureByID :one
-SELECT id, home_team_id, away_team_id, created_at FROM fixtures WHERE id = ? LIMIT 1
+SELECT id, gameweek, home_team_id, away_team_id, created_at FROM fixtures WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetFixtureByID(ctx context.Context, id int64) (Fixture, error) {
@@ -82,6 +85,7 @@ func (q *Queries) GetFixtureByID(ctx context.Context, id int64) (Fixture, error)
 	var i Fixture
 	err := row.Scan(
 		&i.ID,
+		&i.Gameweek,
 		&i.HomeTeamID,
 		&i.AwayTeamID,
 		&i.CreatedAt,
@@ -90,7 +94,7 @@ func (q *Queries) GetFixtureByID(ctx context.Context, id int64) (Fixture, error)
 }
 
 const getFixturesByClubID = `-- name: GetFixturesByClubID :many
-SELECT id, home_team_id, away_team_id, created_at FROM fixtures
+SELECT id, gameweek, home_team_id, away_team_id, created_at FROM fixtures
 WHERE home_team_id = ? OR away_team_id = ?
 ORDER BY id
 `
@@ -111,6 +115,7 @@ func (q *Queries) GetFixturesByClubID(ctx context.Context, arg GetFixturesByClub
 		var i Fixture
 		if err := rows.Scan(
 			&i.ID,
+			&i.Gameweek,
 			&i.HomeTeamID,
 			&i.AwayTeamID,
 			&i.CreatedAt,

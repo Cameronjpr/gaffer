@@ -7,6 +7,7 @@ import (
 
 	"github.com/cameronjpr/gaffer/internal/db"
 	"github.com/cameronjpr/gaffer/internal/domain"
+	"github.com/cameronjpr/gaffer/internal/repository"
 )
 
 // setupTestDB creates an in-memory SQLite database for testing
@@ -133,12 +134,14 @@ func setupTestDB(t *testing.T) (*sql.DB, *db.Queries) {
 func getTestClubs(t *testing.T, queries *db.Queries) (*domain.ClubWithPlayers, *domain.ClubWithPlayers) {
 	t.Helper()
 
-	arsenal, err := domain.GetClubWithPlayers(queries, 1) // Arsenal is ID 1
+	repo := repository.NewClubRepository(queries)
+
+	arsenal, err := repo.GetByID(1) // Arsenal is ID 1
 	if err != nil {
 		t.Fatalf("failed to get Arsenal: %v", err)
 	}
 
-	city, err := domain.GetClubWithPlayers(queries, 2) // Manchester City is ID 2
+	city, err := repo.GetByID(2) // Manchester City is ID 2
 	if err != nil {
 		t.Fatalf("failed to get Manchester City: %v", err)
 	}

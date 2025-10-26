@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 
+	"github.com/cameronjpr/gaffer/internal/components"
 	"github.com/cameronjpr/gaffer/internal/domain"
 	"github.com/cameronjpr/gaffer/internal/simulation"
 	tea "github.com/charmbracelet/bubbletea"
@@ -10,127 +11,92 @@ import (
 )
 
 type MatchModel struct {
-	match    *domain.Match
-	engine   *simulation.Engine
-	isPaused bool
-	width    int
-	height   int
+	match       *domain.Match
+	controller  *simulation.MatchController
+	latestEvent *domain.Event // For commentary and timeline
+	width       int
+	height      int
 }
 
 func NewMatchModel(match *domain.Match) *MatchModel {
+	controller := simulation.NewMatchController(match)
+	// Don't start controller yet - wait for Init()
+
 	return &MatchModel{
-		match:    match,
-		engine:   simulation.NewEngine(match),
-		isPaused: false,
+		match:       match,
+		controller:  controller,
+		latestEvent: nil,
 	}
 }
 
 func (m *MatchModel) Init() tea.Cmd {
-	return nil
+	// Start the controller goroutine now that TUI is ready
+	go m.controller.Run()
+
+	// Start listening for match events
+	return waitForMatchEvent(m.controller)
+}
+
+// waitForMatchEvent creates a Cmd that blocks until the controller sends an event
+func waitForMatchEvent(controller *simulation.MatchController) tea.Cmd {
+	return func() tea.Msg {
+		// This blocks until an event is received
+		// BubbleTea runs this in a goroutine, so blocking is safe
+		return <-controller.EventChan()
+	}
 }
 
 func (m *MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
-
 		case tea.KeySpace:
-			m.isPaused = !m.isPaused
-			if m.isPaused {
-				return m, nil
-			}
-
-			if m.match.IsHalfTime() {
-				m.match.StartSecondHalf()
-			}
-			return m, tick()
-		}
-	case tickMsg:
-		// Check if match is complete
-		if m.match.IsFullTime() {
-			return m, func() tea.Msg {
-				return matchFinishedMsg{match: m.match}
-			}
+			m.controller.SendCommand(simulation.TogglePausedCmd{})
+			return m, waitForMatchEvent(m.controller)
+		case tea.KeyRight:
+			m.controller.SendCommand(simulation.SpeedUpCmd{})
+			return m, waitForMatchEvent(m.controller)
+		case tea.KeyLeft:
+			m.controller.SendCommand(simulation.SlowDownCmd{})
+			return m, waitForMatchEvent(m.controller)
 		}
 
-		// If paused, don't advance
-		if m.isPaused {
-			return m, nil
+	case simulation.MatchUpdateMsg:
+		// Update match state from controller
+		m.match = msg.Match
+		m.latestEvent = msg.LatestEvent
+
+		// Continue listening for next event
+		return m, waitForMatchEvent(m.controller)
+
+	case simulation.HalftimeMsg:
+		// Controller auto-paused at halftime
+		m.match = msg.Match
+		m.match.StartSecondHalf() // Prepare for second half
+		// Continue listening - user will press space to resume
+		return m, waitForMatchEvent(m.controller)
+
+	case simulation.FulltimeMsg:
+		// Match finished
+		m.match = msg.Match
+		return m, func() tea.Msg {
+			return matchFinishedMsg{match: m.match}
 		}
 
-		// Auto-advance to next phase
-		result := m.engine.PlayPhase()
-		m.match.PhaseHistory = append(m.match.PhaseHistory, result)
-
-		if m.match.IsHalfTime() {
-			m.isPaused = true
-			return m, nil
-		}
-
-		// Check if a goal was scored in this phase
-		goalScored := result.HomeGoals > 0 || result.AwayGoals > 0
-
-		// If a goal was scored, pause longer to let user see it
-		if goalScored {
-			return m, tickWithDuration(goalTickDuration)
-		}
-
-		if m.match.IsInAddedTime() {
-			return m, tickWithDuration(addedTimeTickDuration)
-		}
-
-		// Return the next tick command to keep the loop going
-		return m, tick()
+	case simulation.MatchPausedMsg:
+		// User paused the match
+		m.match = msg.Match
+		// Continue listening - user will press space to resume
+		return m, waitForMatchEvent(m.controller)
 	}
 	return m, nil
-}
-
-// buildScoreWidget creates a centered score widget with team names and scores
-func buildScoreWidget(homeTeam, awayTeam string, homeScore, awayScore, width int) string {
-	scoreStr := fmt.Sprintf("%s [%v] – [%v] %s", homeTeam, homeScore, awayScore, awayTeam)
-	return lipgloss.NewStyle().
-		Width(width).
-		Align(lipgloss.Center).
-		Bold(true).
-		Render(scoreStr)
-}
-
-// buildTimelineColumnFromEvents builds a single timeline column with events
-func buildTimelineColumnFromEvents(events []domain.Event, width int, align lipgloss.Position) string {
-	timeline := ""
-	for _, event := range events {
-		timeline += event.String()
-		timeline += "\n"
-	}
-	return lipgloss.NewStyle().
-		Width(width).
-		Align(align).
-		Render(timeline)
-}
-
-// buildTimelineFromEvents creates a centered timeline with home and away events
-func buildTimelineFromEvents(homeEvents, awayEvents []domain.Event, colWidth int) string {
-	// Calculate timeline column width (half of ticker width minus gap)
-	timelineWidth := (colWidth / 2) - 2
-
-	homeTimelineStyled := buildTimelineColumnFromEvents(homeEvents, timelineWidth, lipgloss.Right)
-	awayTimelineStyled := buildTimelineColumnFromEvents(awayEvents, timelineWidth, lipgloss.Left)
-
-	// Add gap between timelines and center the entire timeline
-	gap := "  "
-	timelineContent := lipgloss.JoinHorizontal(lipgloss.Top, homeTimelineStyled, gap, awayTimelineStyled)
-	return lipgloss.NewStyle().
-		Width(colWidth).
-		Align(lipgloss.Center).
-		Render(timelineContent)
 }
 
 func (m *MatchModel) View() string {
 	// Footer - generate commentary on-demand from latest event
 	footer := ""
-	if !m.match.IsHalfTime() && !m.match.IsFullTime() && len(m.match.Events) > 0 {
-		latestEvent := m.match.Events[len(m.match.Events)-1]
-		commentary := GenerateCommentary(latestEvent, m.match)
+	if !m.match.IsHalfTime() && !m.match.IsFullTime() && m.latestEvent != nil {
+		commentary := GenerateCommentary(*m.latestEvent, m.match)
 
 		style := lipgloss.NewStyle().Align(lipgloss.Center).Width(m.width)
 
@@ -162,12 +128,8 @@ func (m *MatchModel) View() string {
 		Padding(0, 1).
 		Render(timeStr)
 
-	// Build score widget using helper function
-	scoreWidget := buildScoreWidget(
-		m.match.Home.Club.Name,
-		m.match.Away.Club.Name,
-		m.match.Home.Score,
-		m.match.Away.Score,
+	scoreWidget := components.Scoreboard(
+		m.match,
 		colWidth,
 	)
 
@@ -184,8 +146,8 @@ func (m *MatchModel) View() string {
 		}
 	}
 
-	timeline := buildTimelineFromEvents(homeEvents, awayEvents, colWidth)
-	zoneIndicator := buildZoneIndicator(m.match.ActiveZone, m.match)
+	timelineView := components.EventsTimeline(homeEvents, awayEvents, colWidth)
+	pitchView := components.Pitch(m.match.ActiveZone, m.match)
 	gap := "  "
 
 	possessionIndicator := lipgloss.NewStyle().
@@ -196,30 +158,13 @@ func (m *MatchModel) View() string {
 
 	tickerContent := lipgloss.JoinVertical(
 		lipgloss.Center,
+		fmt.Sprintf("Speed: %s", m.controller.GetSpeed()),
 		scoreWidget,
 		lipgloss.NewStyle().Italic(true).Render(time),
 		gap,
-		lipgloss.NewStyle().Italic(true).Render(timeline),
+		timelineView,
 		gap,
-		lipgloss.NewStyle().Faint(true).Render(zoneIndicator),
-	)
-
-	// Home team section
-	homeContent := lipgloss.JoinVertical(
-		lipgloss.Left,
-		lipgloss.NewStyle().Bold(true).Render(m.match.Home.Club.Name),
-		lipgloss.NewStyle().Italic(true).Render(m.match.Home.Formation),
-		"",
-		m.match.Home.GetLineup(m.match),
-	)
-
-	// Away team section
-	awayContent := lipgloss.JoinVertical(
-		lipgloss.Left,
-		lipgloss.NewStyle().Bold(true).Render(m.match.Away.Club.Name),
-		lipgloss.NewStyle().Italic(true).Render(m.match.Away.Formation),
-		"",
-		m.match.Away.GetLineup(m.match),
+		pitchView,
 	)
 
 	header := lipgloss.JoinVertical(
@@ -235,12 +180,13 @@ func (m *MatchModel) View() string {
 		matchInfoHeight = 0
 	}
 
-	// Create 3-column layout
+	homeTeamSheet := components.TeamSheet(m.match.Home)
+	awayTeamSheet := components.TeamSheet(m.match.Away)
 	matchInfo := lipgloss.JoinHorizontal(
 		lipgloss.Top,
-		lipgloss.Place(colWidth, matchInfoHeight, lipgloss.Center, lipgloss.Center, homeContent),
+		lipgloss.Place(colWidth, matchInfoHeight, lipgloss.Center, lipgloss.Center, homeTeamSheet),
 		lipgloss.Place(colWidth, matchInfoHeight, lipgloss.Center, lipgloss.Center, tickerContent),
-		lipgloss.Place(colWidth, matchInfoHeight, lipgloss.Center, lipgloss.Center, awayContent),
+		lipgloss.Place(colWidth, matchInfoHeight, lipgloss.Center, lipgloss.Center, awayTeamSheet),
 	)
 
 	// Place footer at the bottom of the screen

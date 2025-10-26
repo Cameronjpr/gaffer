@@ -5,64 +5,34 @@ import (
 	"sort"
 )
 
-type Gameweek struct {
+type Season struct {
 	ID       int
 	Name     string
+	Clubs    []*ClubWithPlayers
 	Fixtures []*Fixture
-}
-
-type Season struct {
-	ID        int
-	Name      string
-	Clubs     []*ClubWithPlayers
-	Gameweeks []*Gameweek
 }
 
 func NewSeason(clubs []*ClubWithPlayers) *Season {
 	season := Season{
-		ID:        1,
-		Name:      "2025/26",
-		Clubs:     clubs,
-		Gameweeks: []*Gameweek{},
+		ID:       1,
+		Name:     "2025/26",
+		Clubs:    clubs,
+		Fixtures: []*Fixture{},
 	}
 
 	return &season
 }
 
-func (s *Season) GenerateGameweeks() {
-	// Generate all fixtures for the season (each pair of teams plays home and away)
-	allFixtures := generateAllFixtures(s.Clubs)
-
+func (s *Season) GenerateAllFixtures() {
 	// Create 38 empty gameweeks
 	for i := 1; i <= 38; i++ {
-		gameweek := Gameweek{
-			ID:       i,
-			Name:     fmt.Sprintf("Gameweek %d", i),
-			Fixtures: []*Fixture{},
-		}
-		s.Gameweeks = append(s.Gameweeks, &gameweek)
+		fixtures := generateAllFixturesForGameweek(s.Clubs, i)
+		s.Fixtures = append(s.Fixtures, fixtures...)
 	}
 
-	// Distribute fixtures across gameweeks
-	fixturesPerGameweek := len(allFixtures) / 38
-	remainder := len(allFixtures) % 38
-
-	fixtureIndex := 0
-	for i := 0; i < 38; i++ {
-		// Some gameweeks get one extra fixture if there's a remainder
-		numFixtures := fixturesPerGameweek
-		if i < remainder {
-			numFixtures++
-		}
-
-		for j := 0; j < numFixtures && fixtureIndex < len(allFixtures); j++ {
-			s.Gameweeks[i].Fixtures = append(s.Gameweeks[i].Fixtures, allFixtures[fixtureIndex])
-			fixtureIndex++
-		}
-	}
 }
 
-func generateAllFixtures(clubs []*ClubWithPlayers) []*Fixture {
+func generateAllFixturesForGameweek(clubs []*ClubWithPlayers, gameweek int) []*Fixture {
 	var fixtures []*Fixture
 	fixtureID := 1
 
@@ -74,6 +44,7 @@ func generateAllFixtures(clubs []*ClubWithPlayers) []*Fixture {
 			}
 			fixture := Fixture{
 				ID:       fixtureID,
+				Gameweek: gameweek,
 				HomeTeam: homeClub,
 				AwayTeam: awayClub,
 				Result:   nil,
@@ -92,6 +63,7 @@ func (s *Season) GetLeagueTable() LeagueTable {
 	}
 
 	for _, club := range s.Clubs {
+		// Get fixtures for this club from the season's fixtures
 		fixtures := s.GetFixturesForClub(club.Club)
 
 		var points int
@@ -121,36 +93,49 @@ func (s *Season) GetLeagueTable() LeagueTable {
 	return table
 }
 
+// GetFixturesForClub returns all fixtures (home and away) for a club, sorted by gameweek
 func (s *Season) GetFixturesForClub(club *Club) []*Fixture {
 	var fixtures []*Fixture
-	for _, gameweek := range s.Gameweeks {
-		for _, fixture := range gameweek.Fixtures {
-			if fixture.HomeTeam.Club == club || fixture.AwayTeam.Club == club {
-				fixtures = append(fixtures, fixture)
-			}
+	for _, fixture := range s.Fixtures {
+		if fixture.HomeTeam.Club == club || fixture.AwayTeam.Club == club {
+			fixtures = append(fixtures, fixture)
 		}
 	}
+	// Sort fixtures by gameweek
+	sort.Slice(fixtures, func(i, j int) bool {
+		return fixtures[i].Gameweek < fixtures[j].Gameweek
+	})
 	return fixtures
 }
 
-// GetNextFixture finds the next fixture in the season that hasn't been played.
+// GetNextFixture finds the next unplayed fixture in the season
 func (s *Season) GetNextFixture() (*Fixture, error) {
-	for i := range s.Gameweeks {
-		for j := range s.Gameweeks[i].Fixtures {
-			f := s.Gameweeks[i].Fixtures[j]
-			if f == nil {
-				continue
-			}
-
-			if f.Result == nil {
-				return f, nil
-			}
-
-			// A fixture is considered unplayed if its Result has no home team.
-			if f.Result.Home == nil {
-				return f, nil
-			}
+	for _, fixture := range s.Fixtures {
+		if fixture.Result == nil {
+			return fixture, nil
 		}
 	}
 	return nil, fmt.Errorf("no unplayed fixtures remaining in the season")
+}
+
+// GetNextFixtureForClub finds the next unplayed fixture for a specific club
+func (s *Season) GetNextFixtureForClub(club *Club) (*Fixture, error) {
+	clubFixtures := s.GetFixturesForClub(club)
+	for _, fixture := range clubFixtures {
+		if fixture.Result == nil {
+			return fixture, nil
+		}
+	}
+	return nil, fmt.Errorf("no unplayed fixtures remaining for club %s", club.Name)
+}
+
+// GetFixturesByGameweek returns all fixtures for a specific gameweek
+func (s *Season) GetFixturesByGameweek(gameweek int) []*Fixture {
+	var fixtures []*Fixture
+	for _, fixture := range s.Fixtures {
+		if fixture.Gameweek == gameweek {
+			fixtures = append(fixtures, fixture)
+		}
+	}
+	return fixtures
 }

@@ -1,24 +1,26 @@
 package tui
 
 import (
-	"fmt"
-
+	"github.com/cameronjpr/gaffer/internal/components"
 	"github.com/cameronjpr/gaffer/internal/domain"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type ManagerHubModel struct {
-	Season     *domain.Season
-	ChosenClub *domain.Club
-	width      int
-	height     int
+	Season      *domain.Season
+	ChosenClub  *domain.Club
+	Fixtures    []*domain.Fixture
+	LeagueTable *domain.LeagueTable
+	width       int
+	height      int
 }
 
-func NewManagerHubModel(season *domain.Season, club *domain.Club) *ManagerHubModel {
+func NewManagerHubModel(season *domain.Season, club *domain.Club, fixtures []*domain.Fixture) *ManagerHubModel {
 	return &ManagerHubModel{
 		ChosenClub: club,
 		Season:     season,
+		Fixtures:   fixtures,
 	}
 }
 
@@ -46,6 +48,8 @@ func (m *ManagerHubModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *ManagerHubModel) View() string {
+	colWidth := m.width / 3
+
 	if m.ChosenClub == nil {
 		panic("ChosenClub is nil, cannot proceed")
 	}
@@ -61,35 +65,14 @@ func (m *ManagerHubModel) View() string {
 		Width(m.width).
 		Render("Press [Space] to start pre-match")
 
-	leagueTableStr := "Pos.  |  Name  |  Played  |  Points\n"
-	for i, position := range m.Season.GetLeagueTable().Positions {
-
-		leagueTableStr += fmt.Sprintf("%d. |  %s  |  %d  |  %d pts\n", i+1, position.Club.Name, position.Played, position.Points)
-	}
-
-	fixturesStr := "Fixtures:\n"
-	clubFixtures := m.Season.GetFixturesForClub(m.ChosenClub)
-	// Show up to 5 fixtures
-	numToShow := len(clubFixtures)
-	if numToShow > 5 {
-		numToShow = 5
-	}
-	if numToShow == 0 {
-		fixturesStr += "No fixtures scheduled\n"
-	} else {
-		for _, fixture := range clubFixtures[:numToShow] {
-			status := ""
-			if fixture.Result != nil {
-				status = fmt.Sprintf(" %d-%d", fixture.Result.Home.Score, fixture.Result.Away.Score)
-			}
-			fixturesStr += fmt.Sprintf("%s vs %s%s\n", fixture.HomeTeam.Club.Name, fixture.AwayTeam.Club.Name, status)
-		}
-	}
+	leagueTableView := components.Table(m.Season.GetLeagueTable())
+	fixturesView := components.Fixtures(m.Fixtures)
 
 	content := lipgloss.JoinHorizontal(
 		lipgloss.Top,
-		lipgloss.NewStyle().Padding(2).Render(fixturesStr),
-		lipgloss.NewStyle().Padding(2).Render(leagueTableStr),
+		lipgloss.NewStyle().Padding(2).Width(colWidth).Render(fixturesView),
+		lipgloss.NewStyle().Padding(2).Width(colWidth).Render("TBC"),
+		lipgloss.NewStyle().Padding(2).Width(colWidth).Render(leagueTableView),
 	)
 
 	main := lipgloss.NewStyle().

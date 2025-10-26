@@ -69,7 +69,7 @@ func (e *Engine) ProgressBall(powerDiff int) bool {
 	}
 
 	// Try to go forward
-	if len(forwardMoves) > 0 && rand.IntN(100) < 70 {
+	if len(forwardMoves) > 0 && rand.IntN(100) < 75 {
 		// Prefer moves to higher-threat zones
 		best := forwardMoves[0]
 		for _, move := range forwardMoves {
@@ -109,7 +109,7 @@ func (e *Engine) AttemptShot(powerDiff int) int {
 	// Power advantage modifies shot quality (each point of power adds 2% to chance)
 	powerModifier := 1.0 + (float64(powerDiff) * 0.02)
 
-	// Calculate final goal probability (capped at 0.9 to keep some realism)
+	// Calculate final goal probability (capped at 0.9 to prevent "guarranteed goals")
 	goalProbability := math.Min(zoneThreat*powerModifier, 0.9)
 
 	// Roll for shot outcome
@@ -152,14 +152,22 @@ func (e *Engine) AttemptShot(powerDiff int) int {
 	return 1
 }
 
-// PlayPhase simulates one phase of play (roughly one minute)
-func (e *Engine) PlayPhase() domain.PhaseResult {
+// TODO – add SimulateMatch to handle calling PlayPhase, instead of TUI
+func (e *Engine) SimulateMatch() {
+	for !e.Match.IsFullTime() {
+		e.SimulateMinute()
+	}
+}
+
+// SimulateMinute simulates one phase of play (roughly one minute)
+func (e *Engine) SimulateMinute() {
 	phaseResult := domain.PhaseResult{}
+
 	homeRoll := rand.IntN(20)
 	awayRoll := rand.IntN(20)
 
-	homePhasePower := e.Match.Home.Club.Strength + homeRoll
-	awayPhasePower := e.Match.Away.Club.Strength + awayRoll
+	homePhasePower := int(e.Match.Home.GetAverageQuality()) + homeRoll
+	awayPhasePower := int(e.Match.Away.GetAverageQuality()) + awayRoll
 	powerDiff := int(math.Abs(float64(homePhasePower - awayPhasePower)))
 
 	morePowerfulTeam := e.Match.Home
@@ -219,6 +227,4 @@ func (e *Engine) PlayPhase() domain.PhaseResult {
 	}
 
 	e.Match.ApplyPhaseResult(&phaseResult)
-
-	return phaseResult
 }

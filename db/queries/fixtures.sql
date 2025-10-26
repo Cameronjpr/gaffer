@@ -10,8 +10,8 @@ WHERE home_team_id = ? OR away_team_id = ?
 ORDER BY id;
 
 -- name: CreateFixture :one
-INSERT INTO fixtures (home_team_id, away_team_id)
-VALUES (?, ?)
+INSERT INTO fixtures (gameweek, home_team_id, away_team_id)
+VALUES (?, ?, ?)
 RETURNING *;
 
 -- name: DeleteFixture :exec

@@ -42,13 +42,31 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				break
 			}
 		}
-		m.managerHub = NewManagerHubModel(m.season, club)
-		// Send WindowSizeMsg to newly activated model
+
+		fixtures, err := m.fixtureRepo.GetByClubID(club.ID)
+		if err != nil {
+			return m, tea.Quit
+		}
+
+		m.managerHub = NewManagerHubModel(m.season, club, fixtures)
 		m.managerHub.width = m.width
 		m.managerHub.height = m.height
 		return m, tick()
 
 	case startPreMatchMsg:
+		// Get the next fixture for the selected club
+		nextFixture, err := m.season.GetNextFixtureForClub(m.managerHub.ChosenClub)
+		if err != nil {
+			// No more matches for this club
+			return m, tea.Quit
+		}
+		nextMatch := domain.NewMatchFromFixture(nextFixture)
+		m.currentMatch = nextMatch
+
+		// Update the prematch and match models with the new match
+		m.prematch = NewPreMatchModel(m.currentMatch)
+		m.match = NewMatchModel(m.currentMatch)
+
 		m.mode = PreMatchMode
 		// Send WindowSizeMsg to newly activated model
 		m.prematch.width = m.width
@@ -60,16 +78,17 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Send WindowSizeMsg to newly activated model
 		m.match.width = m.width
 		m.match.height = m.height
-		return m, tick()
+		// Initialize the match model (starts controller and begins listening)
+		return m, m.match.Init()
 
 	case matchFinishedMsg:
 		match := msg.match
 		match.ForFixture.Result = msg.match
 
-		// Load the next fixture
-		nextFixture, err := m.season.GetNextFixture()
+		// Load the next fixture for the selected club
+		nextFixture, err := m.season.GetNextFixtureForClub(m.managerHub.ChosenClub)
 		if err != nil {
-			// No more matches, for now we just quit
+			// No more matches for this club, for now we just quit
 			return m, tea.Quit
 		}
 		nextMatch := domain.NewMatchFromFixture(nextFixture)

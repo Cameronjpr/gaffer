@@ -19,6 +19,7 @@ type Club struct {
 
 type Fixture struct {
 	ID         int64        `json:"id"`
+	Gameweek   int64        `json:"gameweek"`
 	HomeTeamID int64        `json:"home_team_id"`
 	AwayTeamID int64        `json:"away_team_id"`
 	CreatedAt  sql.NullTime `json:"created_at"`

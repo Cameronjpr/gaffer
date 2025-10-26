@@ -52,12 +52,26 @@ func (m *Match) StartFirstHalf() {
 	m.CurrentHalf = FirstHalf
 	m.CurrentMinute = 1
 	m.HomeAttackingDirection = AttackingEast // Home attacks East in first half
+
+	m.AddEvent(NewEvent(
+		HalfStartsEvent,
+		1,
+		nil,
+		nil,
+	))
 }
 
 func (m *Match) StartSecondHalf() {
 	m.CurrentHalf = SecondHalf
 	m.CurrentMinute = 45                     // Will be incremented to 46 on first tick
 	m.HomeAttackingDirection = AttackingWest // Teams switch sides at halftime
+
+	m.AddEvent(NewEvent(
+		HalfStartsEvent,
+		45,
+		nil,
+		nil,
+	))
 }
 
 func (m *Match) AddEvent(event Event) {

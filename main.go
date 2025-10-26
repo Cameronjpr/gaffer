@@ -27,7 +27,7 @@ func main() {
 	defer database.Close()
 
 	// Seed database with clubs from JSON
-	if err := db.SeedDatabase(database, "clubs.json"); err != nil {
+	if err := db.SeedDatabase(database, "clubs.json", "fixtures.json"); err != nil {
 		fmt.Println("Error seeding database:", err)
 		os.Exit(1)
 	}

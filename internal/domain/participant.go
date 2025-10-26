@@ -61,6 +61,14 @@ func (p *MatchParticipant) GetStarPlayers() []MatchPlayerParticipant {
 	return stars
 }
 
+func (p *MatchParticipant) GetAverageQuality() float64 {
+	totalQuality := 0
+	for _, player := range p.Players {
+		totalQuality += player.Player.Quality
+	}
+	return float64(totalQuality) / float64(len(p.Players))
+}
+
 func (p *MatchParticipant) GetRandomOutfielder() MatchPlayerParticipant {
 	outfielders := make([]MatchPlayerParticipant, 0)
 	for _, player := range p.Players {

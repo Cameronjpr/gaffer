@@ -5,17 +5,50 @@
     "Background": "#DB0007",
     "Foreground": "#FFFFFF",
     "Players": [
-      { "Name": "Raya", "Quality": 18 },
-      { "Name": "Timber", "Quality": 17 },
-      { "Name": "Saliba", "Quality": 18 },
-      { "Name": "Gabriel", "Quality": 18 },
-      { "Name": "Calafiori", "Quality": 17 },
-      { "Name": "Zubimendi", "Quality": 18 },
-      { "Name": "Rice", "Quality": 19 },
-      { "Name": "Ødegaard", "Quality": 18 },
-      { "Name": "Saka", "Quality": 19 },
-      { "Name": "Gyokeres", "Quality": 17 },
-      { "Name": "Trossard", "Quality": 17 }
+      {
+        "Name": "Raya",
+        "Quality": 18
+      },
+      {
+        "Name": "Timber",
+        "Quality": 17
+      },
+      {
+        "Name": "Saliba",
+        "Quality": 18
+      },
+      {
+        "Name": "Gabriel",
+        "Quality": 18
+      },
+      {
+        "Name": "Calafiori",
+        "Quality": 17
+      },
+      {
+        "Name": "Zubimendi",
+        "Quality": 18
+      },
+      {
+        "Name": "Rice",
+        "Quality": 19
+      },
+      {
+        "Name": "Ødegaard",
+        "Quality": 18
+      },
+      {
+        "Name": "Saka",
+        "Quality": 19
+      },
+      {
+        "Name": "Gyokeres",
+        "Quality": 17
+      },
+      {
+        "Name": "Trossard",
+        "Quality": 17
+      }
     ]
   },
   {
@@ -24,17 +57,50 @@
     "Background": "#C8102E",
     "Foreground": "#FFFFFF",
     "Players": [
-      { "Name": "Alisson", "Quality": 18 },
-      { "Name": "Alexander-Arnold", "Quality": 18 },
-      { "Name": "Van Dijk", "Quality": 19 },
-      { "Name": "Konaté", "Quality": 17 },
-      { "Name": "Robertson", "Quality": 17 },
-      { "Name": "Mac Allister", "Quality": 18 },
-      { "Name": "Gravenberch", "Quality": 17 },
-      { "Name": "Szoboszlai", "Quality": 17 },
-      { "Name": "Salah", "Quality": 19 },
-      { "Name": "Núñez", "Quality": 16 },
-      { "Name": "Díaz", "Quality": 17 }
+      {
+        "Name": "Alisson",
+        "Quality": 18
+      },
+      {
+        "Name": "Alexander-Arnold",
+        "Quality": 18
+      },
+      {
+        "Name": "Van Dijk",
+        "Quality": 19
+      },
+      {
+        "Name": "Konaté",
+        "Quality": 17
+      },
+      {
+        "Name": "Robertson",
+        "Quality": 17
+      },
+      {
+        "Name": "Mac Allister",
+        "Quality": 18
+      },
+      {
+        "Name": "Gravenberch",
+        "Quality": 17
+      },
+      {
+        "Name": "Szoboszlai",
+        "Quality": 17
+      },
+      {
+        "Name": "Salah",
+        "Quality": 19
+      },
+      {
+        "Name": "Núñez",
+        "Quality": 16
+      },
+      {
+        "Name": "Díaz",
+        "Quality": 17
+      }
     ]
   },
   {
@@ -43,17 +109,50 @@
     "Background": "#6CABDD",
     "Foreground": "#1C2C5B",
     "Players": [
-      { "Name": "Donnarumma", "Quality": 18 },
-      { "Name": "Lewis", "Quality": 15 },
-      { "Name": "Stones", "Quality": 17 },
-      { "Name": "Ruben Dias", "Quality": 18 },
-      { "Name": "Gvardiol", "Quality": 17 },
-      { "Name": "González", "Quality": 18 },
-      { "Name": "M. Nunes", "Quality": 17 },
-      { "Name": "B. Silva", "Quality": 15 },
-      { "Name": "Savinho", "Quality": 18 },
-      { "Name": "Haaland", "Quality": 19 },
-      { "Name": "Doku", "Quality": 16 }
+      {
+        "Name": "Donnarumma",
+        "Quality": 18
+      },
+      {
+        "Name": "Lewis",
+        "Quality": 15
+      },
+      {
+        "Name": "Stones",
+        "Quality": 17
+      },
+      {
+        "Name": "Ruben Dias",
+        "Quality": 18
+      },
+      {
+        "Name": "Gvardiol",
+        "Quality": 17
+      },
+      {
+        "Name": "González",
+        "Quality": 18
+      },
+      {
+        "Name": "M. Nunes",
+        "Quality": 17
+      },
+      {
+        "Name": "B. Silva",
+        "Quality": 15
+      },
+      {
+        "Name": "Savinho",
+        "Quality": 18
+      },
+      {
+        "Name": "Haaland",
+        "Quality": 19
+      },
+      {
+        "Name": "Doku",
+        "Quality": 16
+      }
     ]
   },
   {
@@ -62,17 +161,882 @@
     "Background": "#034694",
     "Foreground": "#FFFFFF",
     "Players": [
-      { "Name": "Sánchez", "Quality": 16 },
-      { "Name": "James", "Quality": 17 },
-      { "Name": "Fofana", "Quality": 16 },
-      { "Name": "Colwill", "Quality": 16 },
-      { "Name": "Cucurella", "Quality": 16 },
-      { "Name": "Caicedo", "Quality": 17 },
-      { "Name": "Enzo", "Quality": 17 },
-      { "Name": "Palmer", "Quality": 18 },
-      { "Name": "Madueke", "Quality": 16 },
-      { "Name": "Jackson", "Quality": 16 },
-      { "Name": "Nkunku", "Quality": 17 }
+      {
+        "Name": "Sánchez",
+        "Quality": 16
+      },
+      {
+        "Name": "James",
+        "Quality": 17
+      },
+      {
+        "Name": "Fofana",
+        "Quality": 16
+      },
+      {
+        "Name": "Colwill",
+        "Quality": 16
+      },
+      {
+        "Name": "Cucurella",
+        "Quality": 16
+      },
+      {
+        "Name": "Caicedo",
+        "Quality": 17
+      },
+      {
+        "Name": "Enzo",
+        "Quality": 17
+      },
+      {
+        "Name": "Palmer",
+        "Quality": 18
+      },
+      {
+        "Name": "Madueke",
+        "Quality": 16
+      },
+      {
+        "Name": "Jackson",
+        "Quality": 16
+      },
+      {
+        "Name": "Nkunku",
+        "Quality": 17
+      }
+    ]
+  },
+  {
+    "Name": "AFC Bournemouth",
+    "Strength": 14,
+    "Background": "#DA291C",
+    "Foreground": "#000000",
+    "Players": [
+      {
+        "Name": "Neto",
+        "Quality": 15
+      },
+      {
+        "Name": "Smith",
+        "Quality": 13
+      },
+      {
+        "Name": "Zabarnyi",
+        "Quality": 15
+      },
+      {
+        "Name": "Senesi",
+        "Quality": 14
+      },
+      {
+        "Name": "Kerkez",
+        "Quality": 15
+      },
+      {
+        "Name": "Cook",
+        "Quality": 14
+      },
+      {
+        "Name": "Christie",
+        "Quality": 14
+      },
+      {
+        "Name": "Kluivert",
+        "Quality": 15
+      },
+      {
+        "Name": "Tavernier",
+        "Quality": 14
+      },
+      {
+        "Name": "Evanilson",
+        "Quality": 15
+      },
+      {
+        "Name": "Ouattara",
+        "Quality": 14
+      }
+    ]
+  },
+  {
+    "Name": "Aston Villa",
+    "Strength": 17,
+    "Background": "#95BFE5",
+    "Foreground": "#670E36",
+    "Players": [
+      {
+        "Name": "E. Martínez",
+        "Quality": 18
+      },
+      {
+        "Name": "Cash",
+        "Quality": 15
+      },
+      {
+        "Name": "Konsa",
+        "Quality": 16
+      },
+      {
+        "Name": "Pau Torres",
+        "Quality": 16
+      },
+      {
+        "Name": "Digne",
+        "Quality": 15
+      },
+      {
+        "Name": "Kamara",
+        "Quality": 16
+      },
+      {
+        "Name": "McGinn",
+        "Quality": 16
+      },
+      {
+        "Name": "Tielemans",
+        "Quality": 16
+      },
+      {
+        "Name": "Bailey",
+        "Quality": 16
+      },
+      {
+        "Name": "Watkins",
+        "Quality": 17
+      },
+      {
+        "Name": "Rogers",
+        "Quality": 15
+      }
+    ]
+  },
+  {
+    "Name": "Brentford",
+    "Strength": 15,
+    "Background": "#E30613",
+    "Foreground": "#FBB800",
+    "Players": [
+      {
+        "Name": "Flekken",
+        "Quality": 15
+      },
+      {
+        "Name": "Ajer",
+        "Quality": 14
+      },
+      {
+        "Name": "Collins",
+        "Quality": 15
+      },
+      {
+        "Name": "Pinnock",
+        "Quality": 14
+      },
+      {
+        "Name": "Roerslev",
+        "Quality": 13
+      },
+      {
+        "Name": "Nørgaard",
+        "Quality": 14
+      },
+      {
+        "Name": "Janelt",
+        "Quality": 15
+      },
+      {
+        "Name": "Damsgaard",
+        "Quality": 15
+      },
+      {
+        "Name": "Mbeumo",
+        "Quality": 16
+      },
+      {
+        "Name": "Wissa",
+        "Quality": 15
+      },
+      {
+        "Name": "Schade",
+        "Quality": 14
+      }
+    ]
+  },
+  {
+    "Name": "Brighton & Hove Albion",
+    "Strength": 16,
+    "Background": "#0057B8",
+    "Foreground": "#FFFFFF",
+    "Players": [
+      {
+        "Name": "Verbruggen",
+        "Quality": 15
+      },
+      {
+        "Name": "Lamptey",
+        "Quality": 14
+      },
+      {
+        "Name": "Dunk",
+        "Quality": 15
+      },
+      {
+        "Name": "Van Hecke",
+        "Quality": 15
+      },
+      {
+        "Name": "Estupiñán",
+        "Quality": 15
+      },
+      {
+        "Name": "Baleba",
+        "Quality": 15
+      },
+      {
+        "Name": "Gilmour",
+        "Quality": 15
+      },
+      {
+        "Name": "Adingra",
+        "Quality": 15
+      },
+      {
+        "Name": "João Pedro",
+        "Quality": 16
+      },
+      {
+        "Name": "Mitoma",
+        "Quality": 16
+      },
+      {
+        "Name": "Ferguson",
+        "Quality": 15
+      }
+    ]
+  },
+  {
+    "Name": "Crystal Palace",
+    "Strength": 15,
+    "Background": "#1B458F",
+    "Foreground": "#C4122E",
+    "Players": [
+      {
+        "Name": "Henderson",
+        "Quality": 15
+      },
+      {
+        "Name": "Muñoz",
+        "Quality": 14
+      },
+      {
+        "Name": "Guéhi",
+        "Quality": 16
+      },
+      {
+        "Name": "Lacroix",
+        "Quality": 15
+      },
+      {
+        "Name": "Mitchell",
+        "Quality": 14
+      },
+      {
+        "Name": "Lerma",
+        "Quality": 14
+      },
+      {
+        "Name": "Wharton",
+        "Quality": 15
+      },
+      {
+        "Name": "Hughes",
+        "Quality": 14
+      },
+      {
+        "Name": "Eze",
+        "Quality": 17
+      },
+      {
+        "Name": "Mateta",
+        "Quality": 15
+      },
+      {
+        "Name": "Sarr",
+        "Quality": 14
+      }
+    ]
+  },
+  {
+    "Name": "Everton",
+    "Strength": 14,
+    "Background": "#003399",
+    "Foreground": "#FFFFFF",
+    "Players": [
+      {
+        "Name": "Pickford",
+        "Quality": 16
+      },
+      {
+        "Name": "Young",
+        "Quality": 12
+      },
+      {
+        "Name": "Tarkowski",
+        "Quality": 15
+      },
+      {
+        "Name": "Branthwaite",
+        "Quality": 16
+      },
+      {
+        "Name": "Mykolenko",
+        "Quality": 13
+      },
+      {
+        "Name": "Gueye",
+        "Quality": 14
+      },
+      {
+        "Name": "Doucouré",
+        "Quality": 14
+      },
+      {
+        "Name": "McNeil",
+        "Quality": 15
+      },
+      {
+        "Name": "Ndiaye",
+        "Quality": 14
+      },
+      {
+        "Name": "Calvert-Lewin",
+        "Quality": 14
+      },
+      {
+        "Name": "Harrison",
+        "Quality": 13
+      }
+    ]
+  },
+  {
+    "Name": "Fulham",
+    "Strength": 15,
+    "Background": "#FFFFFF",
+    "Foreground": "#000000",
+    "Players": [
+      {
+        "Name": "Leno",
+        "Quality": 15
+      },
+      {
+        "Name": "Tete",
+        "Quality": 14
+      },
+      {
+        "Name": "Andersen",
+        "Quality": 15
+      },
+      {
+        "Name": "Bassey",
+        "Quality": 14
+      },
+      {
+        "Name": "Robinson",
+        "Quality": 15
+      },
+      {
+        "Name": "Berge",
+        "Quality": 14
+      },
+      {
+        "Name": "Pereira",
+        "Quality": 15
+      },
+      {
+        "Name": "Smith Rowe",
+        "Quality": 15
+      },
+      {
+        "Name": "Iwobi",
+        "Quality": 14
+      },
+      {
+        "Name": "Jiménez",
+        "Quality": 14
+      },
+      {
+        "Name": "Traoré",
+        "Quality": 14
+      }
+    ]
+  },
+  {
+    "Name": "Manchester United",
+    "Strength": 16,
+    "Background": "#DA291C",
+    "Foreground": "#FBE122",
+    "Players": [
+      {
+        "Name": "Onana",
+        "Quality": 16
+      },
+      {
+        "Name": "Dalot",
+        "Quality": 15
+      },
+      {
+        "Name": "De Ligt",
+        "Quality": 16
+      },
+      {
+        "Name": "Martínez",
+        "Quality": 16
+      },
+      {
+        "Name": "Shaw",
+        "Quality": 15
+      },
+      {
+        "Name": "Casemiro",
+        "Quality": 15
+      },
+      {
+        "Name": "Mainoo",
+        "Quality": 16
+      },
+      {
+        "Name": "Bruno Fernandes",
+        "Quality": 17
+      },
+      {
+        "Name": "Garnacho",
+        "Quality": 16
+      },
+      {
+        "Name": "Højlund",
+        "Quality": 16
+      },
+      {
+        "Name": "Rashford",
+        "Quality": 15
+      }
+    ]
+  },
+  {
+    "Name": "Newcastle United",
+    "Strength": 16,
+    "Background": "#241F20",
+    "Foreground": "#FFFFFF",
+    "Players": [
+      {
+        "Name": "Pope",
+        "Quality": 16
+      },
+      {
+        "Name": "Trippier",
+        "Quality": 15
+      },
+      {
+        "Name": "Botman",
+        "Quality": 16
+      },
+      {
+        "Name": "Schär",
+        "Quality": 15
+      },
+      {
+        "Name": "Burn",
+        "Quality": 14
+      },
+      {
+        "Name": "Bruno Guimarães",
+        "Quality": 17
+      },
+      {
+        "Name": "Joelinton",
+        "Quality": 16
+      },
+      {
+        "Name": "Willock",
+        "Quality": 14
+      },
+      {
+        "Name": "Gordon",
+        "Quality": 16
+      },
+      {
+        "Name": "Isak",
+        "Quality": 17
+      },
+      {
+        "Name": "Almirón",
+        "Quality": 14
+      }
+    ]
+  },
+  {
+    "Name": "Nottingham Forest",
+    "Strength": 15,
+    "Background": "#DD0000",
+    "Foreground": "#FFFFFF",
+    "Players": [
+      {
+        "Name": "Sels",
+        "Quality": 15
+      },
+      {
+        "Name": "Aina",
+        "Quality": 14
+      },
+      {
+        "Name": "Murillo",
+        "Quality": 16
+      },
+      {
+        "Name": "Milenković",
+        "Quality": 15
+      },
+      {
+        "Name": "Moreno",
+        "Quality": 14
+      },
+      {
+        "Name": "Danilo",
+        "Quality": 14
+      },
+      {
+        "Name": "Yates",
+        "Quality": 14
+      },
+      {
+        "Name": "Gibbs-White",
+        "Quality": 16
+      },
+      {
+        "Name": "Elanga",
+        "Quality": 14
+      },
+      {
+        "Name": "Wood",
+        "Quality": 15
+      },
+      {
+        "Name": "Hudson-Odoi",
+        "Quality": 14
+      }
+    ]
+  },
+  {
+    "Name": "Tottenham Hotspur",
+    "Strength": 17,
+    "Background": "#FFFFFF",
+    "Foreground": "#132257",
+    "Players": [
+      {
+        "Name": "Vicario",
+        "Quality": 16
+      },
+      {
+        "Name": "Porro",
+        "Quality": 16
+      },
+      {
+        "Name": "Romero",
+        "Quality": 17
+      },
+      {
+        "Name": "Van de Ven",
+        "Quality": 16
+      },
+      {
+        "Name": "Udogie",
+        "Quality": 15
+      },
+      {
+        "Name": "Bissouma",
+        "Quality": 15
+      },
+      {
+        "Name": "Bentancur",
+        "Quality": 16
+      },
+      {
+        "Name": "Maddison",
+        "Quality": 16
+      },
+      {
+        "Name": "Kulusevski",
+        "Quality": 16
+      },
+      {
+        "Name": "Solanke",
+        "Quality": 16
+      },
+      {
+        "Name": "Son",
+        "Quality": 17
+      }
+    ]
+  },
+  {
+    "Name": "West Ham United",
+    "Strength": 15,
+    "Background": "#7A263A",
+    "Foreground": "#1BB1E7",
+    "Players": [
+      {
+        "Name": "Areola",
+        "Quality": 15
+      },
+      {
+        "Name": "Coufal",
+        "Quality": 14
+      },
+      {
+        "Name": "Mavropanos",
+        "Quality": 14
+      },
+      {
+        "Name": "Kilman",
+        "Quality": 15
+      },
+      {
+        "Name": "Emerson",
+        "Quality": 14
+      },
+      {
+        "Name": "Álvarez",
+        "Quality": 15
+      },
+      {
+        "Name": "Souček",
+        "Quality": 14
+      },
+      {
+        "Name": "Paquetá",
+        "Quality": 16
+      },
+      {
+        "Name": "Kudus",
+        "Quality": 16
+      },
+      {
+        "Name": "Bowen",
+        "Quality": 15
+      },
+      {
+        "Name": "Antonio",
+        "Quality": 13
+      }
+    ]
+  },
+  {
+    "Name": "Wolverhampton Wanderers",
+    "Strength": 14,
+    "Background": "#FDB913",
+    "Foreground": "#231F20",
+    "Players": [
+      {
+        "Name": "Sá",
+        "Quality": 15
+      },
+      {
+        "Name": "Semedo",
+        "Quality": 14
+      },
+      {
+        "Name": "Dawson",
+        "Quality": 13
+      },
+      {
+        "Name": "Toti",
+        "Quality": 14
+      },
+      {
+        "Name": "Aït-Nouri",
+        "Quality": 15
+      },
+      {
+        "Name": "J. Gomes",
+        "Quality": 15
+      },
+      {
+        "Name": "Lemina",
+        "Quality": 14
+      },
+      {
+        "Name": "Sarabia",
+        "Quality": 14
+      },
+      {
+        "Name": "Cunha",
+        "Quality": 16
+      },
+      {
+        "Name": "Strand Larsen",
+        "Quality": 15
+      },
+      {
+        "Name": "Hwang",
+        "Quality": 14
+      }
+    ]
+  },
+  {
+    "Name": "Leeds United",
+    "Strength": 14,
+    "Background": "#FFCD00",
+    "Foreground": "#1D428A",
+    "Players": [
+      {
+        "Name": "Meslier",
+        "Quality": 15
+      },
+      {
+        "Name": "Bogle",
+        "Quality": 14
+      },
+      {
+        "Name": "Rodon",
+        "Quality": 15
+      },
+      {
+        "Name": "Ampadu",
+        "Quality": 15
+      },
+      {
+        "Name": "Struijk",
+        "Quality": 14
+      },
+      {
+        "Name": "Gruev",
+        "Quality": 14
+      },
+      {
+        "Name": "Rothwell",
+        "Quality": 13
+      },
+      {
+        "Name": "Aaronson",
+        "Quality": 14
+      },
+      {
+        "Name": "Gnonto",
+        "Quality": 15
+      },
+      {
+        "Name": "Ramazani",
+        "Quality": 14
+      },
+      {
+        "Name": "Piroe",
+        "Quality": 14
+      }
+    ]
+  },
+  {
+    "Name": "Burnley",
+    "Strength": 13,
+    "Background": "#6C1D45",
+    "Foreground": "#99D6EA",
+    "Players": [
+      {
+        "Name": "Muric",
+        "Quality": 14
+      },
+      {
+        "Name": "Roberts",
+        "Quality": 13
+      },
+      {
+        "Name": "Esteve",
+        "Quality": 14
+      },
+      {
+        "Name": "Humphreys",
+        "Quality": 13
+      },
+      {
+        "Name": "Pires",
+        "Quality": 13
+      },
+      {
+        "Name": "Cullen",
+        "Quality": 14
+      },
+      {
+        "Name": "Mejbri",
+        "Quality": 14
+      },
+      {
+        "Name": "Flemming",
+        "Quality": 15
+      },
+      {
+        "Name": "Anthony",
+        "Quality": 15
+      },
+      {
+        "Name": "Foster",
+        "Quality": 14
+      },
+      {
+        "Name": "Brownhill",
+        "Quality": 13
+      }
+    ]
+  },
+  {
+    "Name": "Sunderland",
+    "Strength": 13,
+    "Background": "#EB172B",
+    "Foreground": "#211E1F",
+    "Players": [
+      {
+        "Name": "Patterson",
+        "Quality": 14
+      },
+      {
+        "Name": "Hume",
+        "Quality": 14
+      },
+      {
+        "Name": "Mepham",
+        "Quality": 14
+      },
+      {
+        "Name": "O'Nien",
+        "Quality": 14
+      },
+      {
+        "Name": "Cirkin",
+        "Quality": 13
+      },
+      {
+        "Name": "Neil",
+        "Quality": 13
+      },
+      {
+        "Name": "Bellingham",
+        "Quality": 15
+      },
+      {
+        "Name": "Roberts",
+        "Quality": 14
+      },
+      {
+        "Name": "Watson",
+        "Quality": 15
+      },
+      {
+        "Name": "Isidor",
+        "Quality": 14
+      },
+      {
+        "Name": "Mayenda",
+        "Quality": 13
+      }
     ]
   }
 ]

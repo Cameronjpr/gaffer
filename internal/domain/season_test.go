@@ -4,15 +4,37 @@ import (
 	"testing"
 )
 
+// Test helper to create a ClubWithPlayers for testing
+func makeTestClubWithPlayers(name string) *ClubWithPlayers {
+	club := &Club{Name: name}
+	players := []Player{
+		{Name: "Player 1", Quality: 15},
+		{Name: "Player 2", Quality: 15},
+		{Name: "Player 3", Quality: 15},
+		{Name: "Player 4", Quality: 15},
+		{Name: "Player 5", Quality: 15},
+		{Name: "Player 6", Quality: 15},
+		{Name: "Player 7", Quality: 15},
+		{Name: "Player 8", Quality: 15},
+		{Name: "Player 9", Quality: 15},
+		{Name: "Player 10", Quality: 15},
+		{Name: "Player 11", Quality: 15},
+	}
+	return &ClubWithPlayers{
+		Club:    club,
+		Players: players,
+	}
+}
+
 func TestGetNextFixture_AdvancesThroughGameweeks(t *testing.T) {
 	// Setup: Create a season with three clubs for more fixtures
-	club1 := &Club{Name: "Arsenal"}
-	club2 := &Club{Name: "Chelsea"}
-	club3 := &Club{Name: "Liverpool"}
-	clubs := []*Club{club1, club2, club3}
+	club1 := makeTestClubWithPlayers("Arsenal")
+	club2 := makeTestClubWithPlayers("Chelsea")
+	club3 := makeTestClubWithPlayers("Liverpool")
+	clubs := []*ClubWithPlayers{club1, club2, club3}
 
 	season := NewSeason(clubs)
-	season.GenerateGameweeks()
+	season.GenerateAllFixtures()
 
 	// With 3 clubs: 3*2 = 6 total fixtures distributed across 38 gameweeks
 	// First gameweek should have at least 1 fixture
@@ -66,57 +88,57 @@ func TestGetNextFixture_AdvancesThroughGameweeks(t *testing.T) {
 
 func TestGetFixturesForClub_ReturnsFixturesForChosenClub(t *testing.T) {
 	// Setup: Create a season with two clubs
-	club1 := &Club{Name: "Arsenal"}
-	club2 := &Club{Name: "Chelsea"}
-	clubs := []*Club{club1, club2}
+	club1 := makeTestClubWithPlayers("Arsenal")
+	club2 := makeTestClubWithPlayers("Chelsea")
+	clubs := []*ClubWithPlayers{club1, club2}
 
 	season := NewSeason(clubs)
-	season.GenerateGameweeks()
+	season.GenerateAllFixtures()
 
 	// Verify fixtures for chosen club
-	// With 2 clubs: each plays the other twice (home and away) = 2 total fixtures
-	fixtures := season.GetFixturesForClub(club1)
-	expectedFixtures := 2
+	// With 2 clubs across 38 gameweeks: each plays the other twice per gameweek (home and away)
+	// = 2 fixtures per gameweek * 38 gameweeks = 76 total fixtures
+	fixtures := season.GetFixturesForClub( club1.Club)
+	expectedFixtures := 76 // 38 home + 38 away
 	if len(fixtures) != expectedFixtures {
 		t.Errorf("Expected %d fixtures for chosen club, got %d", expectedFixtures, len(fixtures))
 	}
 
 	for _, fixture := range fixtures {
-		if fixture.HomeTeam != club1 && fixture.AwayTeam != club1 {
-			t.Errorf("Expected fixture to be for chosen club, got fixture with home team %s and away team %s", fixture.HomeTeam.Name, fixture.AwayTeam.Name)
+		if fixture.HomeTeam.Club != club1.Club && fixture.AwayTeam.Club != club1.Club {
+			t.Errorf("Expected fixture to be for chosen club, got fixture with home team %s and away team %s", fixture.HomeTeam.Club.Name, fixture.AwayTeam.Club.Name)
 		}
 	}
 
-	// Verify one is home and one is away
+	// Verify equal distribution of home and away fixtures
 	homeCount := 0
 	awayCount := 0
 	for _, fixture := range fixtures {
-		if fixture.HomeTeam == club1 {
+		if fixture.HomeTeam.Club == club1.Club {
 			homeCount++
 		}
-		if fixture.AwayTeam == club1 {
+		if fixture.AwayTeam.Club == club1.Club {
 			awayCount++
 		}
 	}
-	if homeCount != 1 || awayCount != 1 {
-		t.Errorf("Expected 1 home and 1 away fixture, got %d home and %d away", homeCount, awayCount)
+	expectedHomeAway := 38
+	if homeCount != expectedHomeAway || awayCount != expectedHomeAway {
+		t.Errorf("Expected %d home and %d away fixtures, got %d home and %d away", expectedHomeAway, expectedHomeAway, homeCount, awayCount)
 	}
 }
 
 func TestGetNextFixture_ReturnsErrorWhenNoFixturesRemain(t *testing.T) {
 	// Setup: Create a season with two clubs
-	club1 := &Club{Name: "Arsenal"}
-	club2 := &Club{Name: "Chelsea"}
-	clubs := []*Club{club1, club2}
+	club1 := makeTestClubWithPlayers("Arsenal")
+	club2 := makeTestClubWithPlayers("Chelsea")
+	clubs := []*ClubWithPlayers{club1, club2}
 
 	season := NewSeason(clubs)
-	season.GenerateGameweeks()
+	season.GenerateAllFixtures()
 
 	// Mark all fixtures as played
-	for i := range season.Gameweeks {
-		for j := range season.Gameweeks[i].Fixtures {
-			season.Gameweeks[i].Fixtures[j].Result = NewMatchFromFixture(season.Gameweeks[i].Fixtures[j])
-		}
+	for i := range season.Fixtures {
+		season.Fixtures[i].Result = NewMatchFromFixture(season.Fixtures[i])
 	}
 
 	// Try to get next fixture - should return error
@@ -138,12 +160,12 @@ func TestGetNextFixture_ReturnsErrorWhenNoFixturesRemain(t *testing.T) {
 func TestGetNextFixture_WithoutMarkingAsPlayed_ReturnsSameFixture(t *testing.T) {
 	// This test verifies the BUG: if we don't mark fixtures as played,
 	// GetNextFixture will keep returning the same fixture
-	club1 := &Club{Name: "Arsenal"}
-	club2 := &Club{Name: "Chelsea"}
-	clubs := []*Club{club1, club2}
+	club1 := makeTestClubWithPlayers("Arsenal")
+	club2 := makeTestClubWithPlayers("Chelsea")
+	clubs := []*ClubWithPlayers{club1, club2}
 
 	season := NewSeason(clubs)
-	season.GenerateGameweeks()
+	season.GenerateAllFixtures()
 
 	// Get the first fixture
 	firstFixture, err := season.GetNextFixture()
@@ -168,13 +190,13 @@ func TestGetNextFixture_WithoutMarkingAsPlayed_ReturnsSameFixture(t *testing.T) 
 func TestGetLeagueTable_HandlesUnplayedFixtures(t *testing.T) {
 	// This test ensures GetLeagueTable doesn't crash when there are unplayed fixtures
 	// Regression test for nil pointer panic when fixture.Result is nil
-	club1 := &Club{Name: "Arsenal"}
-	club2 := &Club{Name: "Chelsea"}
-	club3 := &Club{Name: "Liverpool"}
-	clubs := []*Club{club1, club2, club3}
+	club1 := makeTestClubWithPlayers("Arsenal")
+	club2 := makeTestClubWithPlayers("Chelsea")
+	club3 := makeTestClubWithPlayers("Liverpool")
+	clubs := []*ClubWithPlayers{club1, club2, club3}
 
 	season := NewSeason(clubs)
-	season.GenerateGameweeks()
+	season.GenerateAllFixtures()
 
 	// Play only the first fixture
 	firstFixture, err := season.GetNextFixture()
@@ -187,7 +209,7 @@ func TestGetLeagueTable_HandlesUnplayedFixtures(t *testing.T) {
 	firstFixture.Result.Away.Score = 1
 
 	// Debug: Check fixture results
-	allFixtures := season.GetFixturesForClub(club1)
+	allFixtures := season.GetFixturesForClub( club1.Club)
 	playedCount := 0
 	for _, f := range allFixtures {
 		if f.Result != nil {

@@ -6,9 +6,11 @@ import "fmt"
 type EventType int
 
 const (
-	GoalEvent EventType = iota
+	HalfStartsEvent EventType = iota
+	HalfEndsEvent
 	MissedShotEvent
 	SavedShotEvent
+	GoalEvent
 	InjuryEvent
 	FoulEvent
 	YellowCardEvent
@@ -17,8 +19,6 @@ const (
 	FreeKickEvent
 	PossessionChangedEvent
 	PossessionRetainedEvent
-	HalfStartsEvent
-	HalfEndsEvent
 )
 
 // Event represents a key moment in the match

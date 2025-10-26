@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS players (
 -- Fixtures table
 CREATE TABLE IF NOT EXISTS fixtures (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    gameweek INTEGER NOT NULL,
     home_team_id INTEGER NOT NULL,
     away_team_id INTEGER NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

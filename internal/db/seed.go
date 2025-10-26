@@ -10,11 +10,17 @@ import (
 
 // ClubSeed represents the JSON structure for seeding clubs
 type ClubSeed struct {
-	Name       string        `json:"Name"`
-	Strength   int64         `json:"Strength"`
-	Background string        `json:"Background"`
-	Foreground string        `json:"Foreground"`
-	Players    []PlayerSeed  `json:"Players"`
+	Name       string       `json:"Name"`
+	Strength   int64        `json:"Strength"`
+	Background string       `json:"Background"`
+	Foreground string       `json:"Foreground"`
+	Players    []PlayerSeed `json:"Players"`
+}
+
+type FixtureSeed struct {
+	Gameweek     int64  `json:"Gameweek"`
+	HomeClubName string `json:"Home"`
+	AwayClubName string `json:"Away"`
 }
 
 // PlayerSeed represents the JSON structure for seeding players
@@ -23,9 +29,9 @@ type PlayerSeed struct {
 	Quality int64  `json:"Quality"`
 }
 
-// SeedDatabase loads clubs and players from clubs.json into the database
-func SeedDatabase(db *sql.DB, clubsJSONPath string) error {
-	// Read the JSON file
+// SeedDatabase loads clubs and players from clubs.json and fixtures.json into the database
+func SeedDatabase(db *sql.DB, clubsJSONPath string, fixturesJSONPath string) error {
+	// Read the Clubs JSON file
 	data, err := os.ReadFile(clubsJSONPath)
 	if err != nil {
 		return fmt.Errorf("failed to read clubs.json: %w", err)
@@ -35,6 +41,18 @@ func SeedDatabase(db *sql.DB, clubsJSONPath string) error {
 	var clubs []ClubSeed
 	if err := json.Unmarshal(data, &clubs); err != nil {
 		return fmt.Errorf("failed to parse clubs.json: %w", err)
+	}
+
+	// Read the Fixtures JSON file
+	fixturesData, err := os.ReadFile(fixturesJSONPath)
+	if err != nil {
+		return fmt.Errorf("failed to read fixtures.json: %w", err)
+	}
+
+	// Parse JSON
+	var fixtures []FixtureSeed
+	if err := json.Unmarshal(fixturesData, &fixtures); err != nil {
+		return fmt.Errorf("failed to parse fixtures.json: %w", err)
 	}
 
 	// Create queries instance
@@ -75,6 +93,26 @@ func SeedDatabase(db *sql.DB, clubsJSONPath string) error {
 				return fmt.Errorf("failed to create player %s for club %s: %w", playerSeed.Name, clubSeed.Name, err)
 			}
 		}
+	}
+
+	for _, fixtureSeed := range fixtures {
+		home, err := queries.GetClubByName(ctx, fixtureSeed.HomeClubName)
+		if err != nil {
+			return fmt.Errorf("failed to get home club %s: %w", fixtureSeed.HomeClubName, err)
+		}
+		away, err := queries.GetClubByName(ctx, fixtureSeed.AwayClubName)
+		if err != nil {
+			return fmt.Errorf("failed to get away club %s: %w", fixtureSeed.AwayClubName, err)
+		}
+		_, err = queries.CreateFixture(ctx, CreateFixtureParams{
+			Gameweek:   fixtureSeed.Gameweek,
+			HomeTeamID: home.ID,
+			AwayTeamID: away.ID,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create fixture %s vs %s: %w", home.Name, away.Name, err)
+		}
+
 	}
 
 	return nil
