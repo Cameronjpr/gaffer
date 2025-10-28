@@ -48,6 +48,34 @@
       {
         "Name": "Trossard",
         "Quality": 17
+      },
+      {
+        "Name": "Ramsdale",
+        "Quality": 16
+      },
+      {
+        "Name": "Partey",
+        "Quality": 16
+      },
+      {
+        "Name": "Jorginho",
+        "Quality": 15
+      },
+      {
+        "Name": "Jesus",
+        "Quality": 16
+      },
+      {
+        "Name": "Martinelli",
+        "Quality": 17
+      },
+      {
+        "Name": "Kiwior",
+        "Quality": 15
+      },
+      {
+        "Name": "Havertz",
+        "Quality": 16
       }
     ]
   },
@@ -99,6 +127,34 @@
       },
       {
         "Name": "Díaz",
+        "Quality": 17
+      },
+      {
+        "Name": "Kelleher",
+        "Quality": 16
+      },
+      {
+        "Name": "Gomez",
+        "Quality": 16
+      },
+      {
+        "Name": "Tsimikas",
+        "Quality": 15
+      },
+      {
+        "Name": "Endo",
+        "Quality": 15
+      },
+      {
+        "Name": "Jones",
+        "Quality": 15
+      },
+      {
+        "Name": "Gakpo",
+        "Quality": 16
+      },
+      {
+        "Name": "Jota",
         "Quality": 17
       }
     ]
@@ -152,6 +208,34 @@
       {
         "Name": "Doku",
         "Quality": 16
+      },
+      {
+        "Name": "Ortega",
+        "Quality": 16
+      },
+      {
+        "Name": "Walker",
+        "Quality": 16
+      },
+      {
+        "Name": "Akanji",
+        "Quality": 16
+      },
+      {
+        "Name": "Kovačić",
+        "Quality": 16
+      },
+      {
+        "Name": "Foden",
+        "Quality": 18
+      },
+      {
+        "Name": "Grealish",
+        "Quality": 17
+      },
+      {
+        "Name": "Álvarez",
+        "Quality": 16
       }
     ]
   },
@@ -204,6 +288,34 @@
       {
         "Name": "Nkunku",
         "Quality": 17
+      },
+      {
+        "Name": "Jörgensen",
+        "Quality": 15
+      },
+      {
+        "Name": "Gusto",
+        "Quality": 15
+      },
+      {
+        "Name": "Badiashile",
+        "Quality": 15
+      },
+      {
+        "Name": "Veiga",
+        "Quality": 15
+      },
+      {
+        "Name": "Mudryk",
+        "Quality": 15
+      },
+      {
+        "Name": "João Félix",
+        "Quality": 16
+      },
+      {
+        "Name": "Sancho",
+        "Quality": 15
       }
     ]
   },
@@ -256,6 +368,34 @@
       {
         "Name": "Ouattara",
         "Quality": 14
+      },
+      {
+        "Name": "Travers",
+        "Quality": 13
+      },
+      {
+        "Name": "Araujo",
+        "Quality": 12
+      },
+      {
+        "Name": "Hill",
+        "Quality": 12
+      },
+      {
+        "Name": "Adams",
+        "Quality": 13
+      },
+      {
+        "Name": "Scott",
+        "Quality": 13
+      },
+      {
+        "Name": "Semenyo",
+        "Quality": 14
+      },
+      {
+        "Name": "Sinisterra",
+        "Quality": 13
       }
     ]
   },
@@ -307,6 +447,34 @@
       },
       {
         "Name": "Rogers",
+        "Quality": 15
+      },
+      {
+        "Name": "Olsen",
+        "Quality": 15
+      },
+      {
+        "Name": "Carlos",
+        "Quality": 14
+      },
+      {
+        "Name": "Torres",
+        "Quality": 15
+      },
+      {
+        "Name": "Onana",
+        "Quality": 15
+      },
+      {
+        "Name": "Ramsey",
+        "Quality": 15
+      },
+      {
+        "Name": "Buendía",
+        "Quality": 15
+      },
+      {
+        "Name": "Durán",
         "Quality": 15
       }
     ]
@@ -360,6 +528,34 @@
       {
         "Name": "Schade",
         "Quality": 14
+      },
+      {
+        "Name": "Valdimarsson",
+        "Quality": 13
+      },
+      {
+        "Name": "Mee",
+        "Quality": 13
+      },
+      {
+        "Name": "Van den Berg",
+        "Quality": 13
+      },
+      {
+        "Name": "Yarmolyuk",
+        "Quality": 13
+      },
+      {
+        "Name": "Jensen",
+        "Quality": 13
+      },
+      {
+        "Name": "Lewis-Potter",
+        "Quality": 14
+      },
+      {
+        "Name": "Carvalho",
+        "Quality": 13
       }
     ]
   },
@@ -412,6 +608,34 @@
       {
         "Name": "Ferguson",
         "Quality": 15
+      },
+      {
+        "Name": "Steele",
+        "Quality": 14
+      },
+      {
+        "Name": "Veltman",
+        "Quality": 14
+      },
+      {
+        "Name": "Webster",
+        "Quality": 14
+      },
+      {
+        "Name": "Ayari",
+        "Quality": 14
+      },
+      {
+        "Name": "Moder",
+        "Quality": 14
+      },
+      {
+        "Name": "Enciso",
+        "Quality": 14
+      },
+      {
+        "Name": "Welbeck",
+        "Quality": 14
       }
     ]
   },
@@ -464,6 +688,34 @@
       {
         "Name": "Sarr",
         "Quality": 14
+      },
+      {
+        "Name": "Turner",
+        "Quality": 14
+      },
+      {
+        "Name": "Ward",
+        "Quality": 13
+      },
+      {
+        "Name": "Chalobah",
+        "Quality": 14
+      },
+      {
+        "Name": "Devenny",
+        "Quality": 13
+      },
+      {
+        "Name": "Schlupp",
+        "Quality": 13
+      },
+      {
+        "Name": "Kamada",
+        "Quality": 14
+      },
+      {
+        "Name": "Nketiah",
+        "Quality": 15
       }
     ]
   },
@@ -515,6 +767,34 @@
       },
       {
         "Name": "Harrison",
+        "Quality": 13
+      },
+      {
+        "Name": "Virginia",
+        "Quality": 13
+      },
+      {
+        "Name": "Keane",
+        "Quality": 13
+      },
+      {
+        "Name": "Patterson",
+        "Quality": 13
+      },
+      {
+        "Name": "Garner",
+        "Quality": 14
+      },
+      {
+        "Name": "Mangala",
+        "Quality": 13
+      },
+      {
+        "Name": "Lindstrøm",
+        "Quality": 14
+      },
+      {
+        "Name": "Beto",
         "Quality": 13
       }
     ]
@@ -568,6 +848,34 @@
       {
         "Name": "Traoré",
         "Quality": 14
+      },
+      {
+        "Name": "Benda",
+        "Quality": 13
+      },
+      {
+        "Name": "Castagne",
+        "Quality": 14
+      },
+      {
+        "Name": "Diop",
+        "Quality": 14
+      },
+      {
+        "Name": "Reed",
+        "Quality": 13
+      },
+      {
+        "Name": "Cairney",
+        "Quality": 14
+      },
+      {
+        "Name": "Wilson",
+        "Quality": 14
+      },
+      {
+        "Name": "Muniz",
+        "Quality": 14
       }
     ]
   },
@@ -619,6 +927,34 @@
       },
       {
         "Name": "Rashford",
+        "Quality": 15
+      },
+      {
+        "Name": "Bayındır",
+        "Quality": 14
+      },
+      {
+        "Name": "Maguire",
+        "Quality": 14
+      },
+      {
+        "Name": "Lindelöf",
+        "Quality": 14
+      },
+      {
+        "Name": "Mazraoui",
+        "Quality": 15
+      },
+      {
+        "Name": "Ugarte",
+        "Quality": 15
+      },
+      {
+        "Name": "Mount",
+        "Quality": 15
+      },
+      {
+        "Name": "Zirkzee",
         "Quality": 15
       }
     ]
@@ -672,6 +1008,34 @@
       {
         "Name": "Almirón",
         "Quality": 14
+      },
+      {
+        "Name": "Dubravka",
+        "Quality": 15
+      },
+      {
+        "Name": "Livramento",
+        "Quality": 14
+      },
+      {
+        "Name": "Krafth",
+        "Quality": 13
+      },
+      {
+        "Name": "Longstaff",
+        "Quality": 14
+      },
+      {
+        "Name": "Miley",
+        "Quality": 13
+      },
+      {
+        "Name": "Murphy",
+        "Quality": 13
+      },
+      {
+        "Name": "Wilson",
+        "Quality": 14
       }
     ]
   },
@@ -723,6 +1087,34 @@
       },
       {
         "Name": "Hudson-Odoi",
+        "Quality": 14
+      },
+      {
+        "Name": "Miguel",
+        "Quality": 13
+      },
+      {
+        "Name": "Williams",
+        "Quality": 13
+      },
+      {
+        "Name": "Boly",
+        "Quality": 13
+      },
+      {
+        "Name": "Domínguez",
+        "Quality": 14
+      },
+      {
+        "Name": "Anderson",
+        "Quality": 13
+      },
+      {
+        "Name": "Jota Silva",
+        "Quality": 13
+      },
+      {
+        "Name": "Awoniyi",
         "Quality": 14
       }
     ]
@@ -776,6 +1168,34 @@
       {
         "Name": "Son",
         "Quality": 17
+      },
+      {
+        "Name": "Forster",
+        "Quality": 14
+      },
+      {
+        "Name": "Gray",
+        "Quality": 14
+      },
+      {
+        "Name": "Dragusin",
+        "Quality": 15
+      },
+      {
+        "Name": "Sarr",
+        "Quality": 15
+      },
+      {
+        "Name": "Bergvall",
+        "Quality": 14
+      },
+      {
+        "Name": "Johnson",
+        "Quality": 15
+      },
+      {
+        "Name": "Richarlison",
+        "Quality": 15
       }
     ]
   },
@@ -827,6 +1247,34 @@
       },
       {
         "Name": "Antonio",
+        "Quality": 13
+      },
+      {
+        "Name": "Fabiański",
+        "Quality": 14
+      },
+      {
+        "Name": "Johnson",
+        "Quality": 13
+      },
+      {
+        "Name": "Todibo",
+        "Quality": 14
+      },
+      {
+        "Name": "Cresswell",
+        "Quality": 12
+      },
+      {
+        "Name": "Rodriguez",
+        "Quality": 13
+      },
+      {
+        "Name": "Summerville",
+        "Quality": 14
+      },
+      {
+        "Name": "Ings",
         "Quality": 13
       }
     ]
@@ -880,6 +1328,34 @@
       {
         "Name": "Hwang",
         "Quality": 14
+      },
+      {
+        "Name": "Bentley",
+        "Quality": 13
+      },
+      {
+        "Name": "Doherty",
+        "Quality": 12
+      },
+      {
+        "Name": "Bueno",
+        "Quality": 13
+      },
+      {
+        "Name": "Doyle",
+        "Quality": 13
+      },
+      {
+        "Name": "André",
+        "Quality": 14
+      },
+      {
+        "Name": "Bellegarde",
+        "Quality": 13
+      },
+      {
+        "Name": "Guedes",
+        "Quality": 13
       }
     ]
   },
@@ -932,6 +1408,34 @@
       {
         "Name": "Piroe",
         "Quality": 14
+      },
+      {
+        "Name": "Darlow",
+        "Quality": 13
+      },
+      {
+        "Name": "Byram",
+        "Quality": 12
+      },
+      {
+        "Name": "Schmidt",
+        "Quality": 13
+      },
+      {
+        "Name": "Tanaka",
+        "Quality": 14
+      },
+      {
+        "Name": "Kamara",
+        "Quality": 13
+      },
+      {
+        "Name": "James",
+        "Quality": 13
+      },
+      {
+        "Name": "Joseph",
+        "Quality": 13
       }
     ]
   },
@@ -983,6 +1487,34 @@
       },
       {
         "Name": "Brownhill",
+        "Quality": 13
+      },
+      {
+        "Name": "Trafford",
+        "Quality": 13
+      },
+      {
+        "Name": "Egan-Riley",
+        "Quality": 12
+      },
+      {
+        "Name": "Laurent",
+        "Quality": 12
+      },
+      {
+        "Name": "Koleosho",
+        "Quality": 13
+      },
+      {
+        "Name": "Ekdal",
+        "Quality": 12
+      },
+      {
+        "Name": "Rodríguez",
+        "Quality": 13
+      },
+      {
+        "Name": "Odobert",
         "Quality": 13
       }
     ]
@@ -1036,6 +1568,34 @@
       {
         "Name": "Mayenda",
         "Quality": 13
+      },
+      {
+        "Name": "Moore",
+        "Quality": 12
+      },
+      {
+        "Name": "Alese",
+        "Quality": 12
+      },
+      {
+        "Name": "Hjelde",
+        "Quality": 12
+      },
+      {
+        "Name": "Browne",
+        "Quality": 13
+      },
+      {
+        "Name": "Ba",
+        "Quality": 12
+      },
+      {
+        "Name": "Mundle",
+        "Quality": 13
+      },
+      {
+        "Name": "Rusyn",
+        "Quality": 12
       }
     ]
   }

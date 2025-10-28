@@ -130,7 +130,6 @@ func (mc *MatchController) handleCommand(cmd Command) {
 
 	case ResumeMatchCmd:
 		mc.paused = false
-		// Optionally send a MatchResumedMsg if needed
 
 	case SpeedUpCmd:
 		if mc.speedIndex == len(speeds)-1 {
@@ -160,7 +159,22 @@ func (mc *MatchController) handleCommand(cmd Command) {
 		mc.paused = !mc.paused
 		if mc.paused {
 			mc.eventChan <- MatchPausedMsg{Match: mc.match}
+		} else {
+			// When unpausing at halftime, start the second half
+			if mc.match.IsHalfTime() {
+				mc.match.StartSecondHalf()
+				mc.eventChan <- MatchResumedMsg{Match: mc.match}
+			}
 		}
-		// If unpausing, next tick will send MatchUpdateMsg automatically
+	// If unpausing, next tick will send MatchUpdateMsg automatically
+
+	case SubstitutePlayerCmd:
+		subCmd := cmd.(SubstitutePlayerCmd)
+		subCmd.Participant.MakeSubstitution(subCmd.PlayerIn, subCmd.PlayerOut)
+		mc.eventChan <- SubstitutionMadeMsg{
+			Match:     mc.match,
+			PlayerOut: subCmd.PlayerOut,
+			PlayerIn:  subCmd.PlayerIn,
+		}
 	}
 }

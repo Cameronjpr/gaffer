@@ -12,7 +12,7 @@ const (
 
 // buildZoneIndicator creates a 5x4 grid showing current active zone with goals
 // Layout: 5 rows (lanes: LW, LH, C, RH, RW) × 4 columns (West to East)
-func Pitch(zone domain.PitchZone, match *domain.Match) string {
+func Pitch(match *domain.Match) string {
 	// Map zones to grid positions (horizontal pitch: West to East, left to right)
 	// Row represents lane (0=Left Wing, 4=Right Wing)
 	// Column represents depth (0=West, 3=East)
@@ -50,7 +50,7 @@ func Pitch(zone domain.PitchZone, match *domain.Match) string {
 	grid := [pitchZoneWidth][pitchZoneHeight]string{}
 	for z, pos := range zoneMap {
 		row, col := pos[0], pos[1]
-		if z == zone {
+		if z == match.ActiveZone {
 			grid[row][col] = "   ●   " // Active zone
 		} else {
 			grid[row][col] = "   ·   " // Inactive zone

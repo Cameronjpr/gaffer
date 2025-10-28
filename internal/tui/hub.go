@@ -35,7 +35,7 @@ func (m *ManagerHubModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch msg.Type {
-		case tea.KeySpace:
+		case tea.KeyEnter:
 			return m, func() tea.Msg {
 				return startPreMatchMsg{}
 			}
@@ -49,6 +49,8 @@ func (m *ManagerHubModel) View() string {
 	if m.ChosenClub == nil {
 		panic("ChosenClub is nil, cannot proceed")
 	}
+
+	// Header with club branding
 	header := lipgloss.NewStyle().
 		Align(lipgloss.Center).
 		Width(m.width).
@@ -57,10 +59,17 @@ func (m *ManagerHubModel) View() string {
 		Background(lipgloss.Color(m.ChosenClub.Background)).
 		Foreground(lipgloss.Color(m.ChosenClub.Foreground)).
 		Render(m.ChosenClub.Name)
+
+	// Footer with instructions
 	footer := lipgloss.NewStyle().
 		Align(lipgloss.Center).
 		Width(m.width).
-		Render("Press [Space] to start pre-match")
+		Render("Press [Enter] to start pre-match")
+
+	// Main content area - calculate flexible content height
+	headerHeight := lipgloss.Height(header)
+	footerHeight := lipgloss.Height(footer)
+	contentHeight := m.height - headerHeight - footerHeight
 
 	leagueTableView := ""
 	if m.LeagueTable != nil {
@@ -75,12 +84,15 @@ func (m *ManagerHubModel) View() string {
 		leagueTableView,
 	)
 
-	main := lipgloss.NewStyle().
-		Width(m.width).
-		Height(m.height-lipgloss.Height(header)-lipgloss.Height(footer)).
-		Align(lipgloss.Center, lipgloss.Center).
-		Render(content)
+	// Center content in available space
+	centeredContent := components.Centered(m.width, contentHeight, content)
 
-	return lipgloss.JoinVertical(lipgloss.Top, header, main, footer)
+	// Use ScreenLayout to organize header, content, footer
+	sections := []components.ScreenSection{
+		{Height: headerHeight, Content: header},
+		{Height: contentHeight, Content: centeredContent},
+		{Height: footerHeight, Content: footer},
+	}
 
+	return components.ScreenLayout(m.height, sections)
 }

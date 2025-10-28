@@ -1,8 +1,6 @@
 package tui
 
 import (
-	"fmt"
-
 	"github.com/cameronjpr/gaffer/internal/components"
 	"github.com/cameronjpr/gaffer/internal/domain"
 	"github.com/cameronjpr/gaffer/internal/simulation"
@@ -11,20 +9,34 @@ import (
 )
 
 type MatchModel struct {
-	match       *domain.Match
-	controller  *simulation.MatchController
-	latestEvent *domain.Event // For commentary and timeline
-	width       int
-	height      int
+	match            *domain.Match
+	controller       *simulation.MatchController
+	latestEvent      *domain.Event            // For commentary and timeline
+	userTeam         *domain.MatchParticipant // Direct pointer to user's controlled team
+	width            int
+	height           int
+	showSubModal     bool
+	showTacticsModal bool
 }
 
-func NewMatchModel(match *domain.Match) *MatchModel {
+func NewMatchModel(match *domain.Match, userClubID int64) *MatchModel {
 	controller := simulation.NewMatchController(match)
-	// Don't start controller yet - wait for Init()
 
+	// Determine which team the user controls (handle nil match during initialization)
+	var userTeam *domain.MatchParticipant
+	if match != nil {
+		if match.Home.Club.ID == userClubID {
+			userTeam = match.Home
+		} else {
+			userTeam = match.Away
+		}
+	}
+
+	// Don't start controller yet - wait for Init()
 	return &MatchModel{
 		match:       match,
 		controller:  controller,
+		userTeam:    userTeam,
 		latestEvent: nil,
 	}
 }
@@ -35,6 +47,19 @@ func (m *MatchModel) Init() tea.Cmd {
 
 	// Start listening for match events
 	return waitForMatchEvent(m.controller)
+}
+
+// GetOpponentTeam returns the team the user is playing against
+func (m *MatchModel) GetOpponentTeam() *domain.MatchParticipant {
+	if m.userTeam == m.match.Home {
+		return m.match.Away
+	}
+	return m.match.Home
+}
+
+// IsUserControlled checks if the given participant is the user's team
+func (m *MatchModel) IsUserControlled(participant *domain.MatchParticipant) bool {
+	return participant == m.userTeam
 }
 
 // waitForMatchEvent creates a Cmd that blocks until the controller sends an event
@@ -50,6 +75,15 @@ func (m *MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
+		case tea.KeyEnter:
+			if m.showSubModal {
+				m.controller.SendCommand(simulation.SubstitutePlayerCmd{
+					Participant: m.userTeam,
+					PlayerIn:    m.userTeam.Bench[0],
+					PlayerOut:   m.userTeam.CurrentXI[0],
+				})
+			}
+			return m, waitForMatchEvent(m.controller)
 		case tea.KeySpace:
 			m.controller.SendCommand(simulation.TogglePausedCmd{})
 			return m, waitForMatchEvent(m.controller)
@@ -59,6 +93,15 @@ func (m *MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyLeft:
 			m.controller.SendCommand(simulation.SlowDownCmd{})
 			return m, waitForMatchEvent(m.controller)
+		case tea.KeyRunes:
+			switch msg.Runes[0] {
+			case 's':
+				m.showSubModal = !m.showSubModal
+				return m, waitForMatchEvent(m.controller)
+			case 't':
+				m.showTacticsModal = !m.showTacticsModal
+				return m, waitForMatchEvent(m.controller)
+			}
 		}
 
 	case simulation.MatchUpdateMsg:
@@ -72,7 +115,6 @@ func (m *MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case simulation.HalftimeMsg:
 		// Controller auto-paused at halftime
 		m.match = msg.Match
-		m.match.StartSecondHalf() // Prepare for second half
 		// Continue listening - user will press space to resume
 		return m, waitForMatchEvent(m.controller)
 
@@ -88,113 +130,72 @@ func (m *MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.match = msg.Match
 		// Continue listening - user will press space to resume
 		return m, waitForMatchEvent(m.controller)
+
+	case simulation.MatchResumedMsg:
+		// User resumed the match
+		m.match = msg.Match
+		// Continue listening - user will press space to pause
+		return m, waitForMatchEvent(m.controller)
+
+	case simulation.SubstitutionMadeMsg:
+		m.match = msg.Match
+		return m, waitForMatchEvent(m.controller)
 	}
+
 	return m, nil
 }
 
 func (m *MatchModel) View() string {
-	// Footer - generate commentary on-demand from latest event
-	footer := ""
-	if !m.match.IsHalfTime() && !m.match.IsFullTime() && m.latestEvent != nil {
-		commentary := GenerateCommentary(*m.latestEvent, m.match)
-
-		style := lipgloss.NewStyle().Align(lipgloss.Center).Width(m.width)
-
-		// Use the commentary's For field to determine styling
-		if commentary.EventType == domain.GoalEvent && commentary.For != nil {
-			style = style.Bold(true).
-				Background(lipgloss.Color(commentary.For.Club.Background)).
-				Foreground(lipgloss.Color(commentary.For.Club.Foreground))
-		} else {
-			style = style.Background(lipgloss.Color("#000000"))
-		}
-
-		footer = style.Render(commentary.Message)
-	}
-
-	// Calculate column width
 	colWidth := m.width / 3
-	timeStr := fmt.Sprintf("(%v:00)", m.match.CurrentMinute)
-	if m.match.IsHalfTime() {
-		timeStr = "HT"
-	} else if m.match.IsFullTime() {
-		timeStr = "FT"
-	} else if m.match.IsFirstHalf() && m.match.IsInAddedTime() {
-		timeStr += fmt.Sprintf("+%v'", m.match.GetAddedTime(domain.FirstHalf))
-	} else if m.match.IsSecondHalf() && m.match.IsInAddedTime() {
-		timeStr += fmt.Sprintf("+%v'", m.match.GetAddedTime(domain.SecondHalf))
-	}
-	time := lipgloss.NewStyle().
-		Padding(0, 1).
-		Render(timeStr)
 
-	scoreWidget := components.Scoreboard(
-		m.match,
-		colWidth,
-	)
-
-	// Filter events for each team's timeline (only show goal events)
-	var homeEvents []domain.Event
-	var awayEvents []domain.Event
-	for _, event := range m.match.Events {
-		if event.Type == domain.GoalEvent {
-			if event.For == m.match.Home {
-				homeEvents = append(homeEvents, event)
-			} else if event.For == m.match.Away {
-				awayEvents = append(awayEvents, event)
-			}
-		}
+	// Show substitution modal if active
+	if m.showSubModal {
+		// TODO: Implement substitution modal content
+		modalContent := components.SubstitutionsModal(m.userTeam.CurrentXI, m.userTeam.Bench)
+		return components.SimpleModal(m.width, m.height, "Make Substitution – press [S] to close", modalContent)
 	}
 
-	timelineView := components.EventsTimeline(homeEvents, awayEvents, colWidth)
-	pitchView := components.Pitch(m.match.ActiveZone, m.match)
-	gap := "  "
+	if m.showTacticsModal {
+		modalContent := "Coming soon"
+		return components.SimpleModal(m.width, m.height, "Adjust Tactics – press [T] to close", modalContent)
+	}
 
+	// Possession indicator header
 	possessionIndicator := lipgloss.NewStyle().
 		Width(m.width).
 		Border(lipgloss.NormalBorder(), false, false, true, false).
 		BorderBottomBackground(lipgloss.Color(m.match.TeamInPossession.Club.Background)).
 		Render()
 
-	tickerContent := lipgloss.JoinVertical(
-		lipgloss.Center,
-		fmt.Sprintf("Speed: %s", m.controller.GetSpeed()),
-		scoreWidget,
-		lipgloss.NewStyle().Italic(true).Render(time),
-		gap,
-		timelineView,
-		gap,
-		pitchView,
-	)
+	// Footer with controls
+	footer := components.MatchToolbar(m.width, m.match)
 
-	header := lipgloss.JoinVertical(
-		lipgloss.Center,
-		possessionIndicator,
-	)
+	// Calculate heights
+	headerHeight := lipgloss.Height(possessionIndicator)
+	footerHeight := lipgloss.Height(footer)
+	contentHeight := m.height - headerHeight - footerHeight
 
-	// Calculate heights - footer takes 1 line, rest is for match info
-	headerHeight := 1
-	footerHeight := 1
-	matchInfoHeight := m.height - footerHeight - headerHeight
-	if matchInfoHeight < 0 {
-		matchInfoHeight = 0
-	}
-
+	// Main match content - three columns
 	homeTeamSheet := components.TeamSheet(m.match.Home)
 	awayTeamSheet := components.TeamSheet(m.match.Away)
-	matchInfo := lipgloss.JoinHorizontal(
+	matchActionView := components.MatchActionView(colWidth, m.controller.GetSpeed(), m.match)
+
+	matchContent := lipgloss.JoinHorizontal(
 		lipgloss.Top,
-		lipgloss.Place(colWidth, matchInfoHeight, lipgloss.Center, lipgloss.Center, homeTeamSheet),
-		lipgloss.Place(colWidth, matchInfoHeight, lipgloss.Center, lipgloss.Center, tickerContent),
-		lipgloss.Place(colWidth, matchInfoHeight, lipgloss.Center, lipgloss.Center, awayTeamSheet),
+		homeTeamSheet,
+		matchActionView,
+		awayTeamSheet,
 	)
 
-	// Place footer at the bottom of the screen
-	if footer != "" {
-		footerPlaced := lipgloss.Place(m.width, footerHeight, lipgloss.Center, lipgloss.Bottom, footer)
-		headerPlaced := lipgloss.Place(colWidth, headerHeight, lipgloss.Center, lipgloss.Center, header)
-		return lipgloss.JoinVertical(lipgloss.Top, headerPlaced, matchInfo, footerPlaced)
+	// Center content vertically and horizontally in available space
+	matchContent = components.Centered(m.width, contentHeight, matchContent)
+
+	// Use ScreenLayout to organize header, content, footer
+	sections := []components.ScreenSection{
+		{Height: headerHeight, Content: possessionIndicator},
+		{Height: contentHeight, Content: matchContent},
+		{Height: footerHeight, Content: footer},
 	}
 
-	return matchInfo
+	return components.ScreenLayout(m.height, sections)
 }

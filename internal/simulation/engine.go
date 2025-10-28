@@ -147,7 +147,7 @@ func (e *Engine) AttemptShot(powerDiff int) int {
 		domain.GoalEvent,
 		e.Match.CurrentMinute,
 		e.Match.TeamInPossession,
-		&scorer,
+		scorer,
 	))
 	return 1
 }

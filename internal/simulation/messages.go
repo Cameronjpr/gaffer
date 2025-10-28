@@ -32,6 +32,14 @@ type SlowDownCmd struct{}
 
 func (SlowDownCmd) isCommand() {}
 
+type SubstitutePlayerCmd struct {
+	Participant *domain.MatchParticipant
+	PlayerOut   *domain.MatchPlayerParticipant
+	PlayerIn    *domain.MatchPlayerParticipant
+}
+
+func (SubstitutePlayerCmd) isCommand() {}
+
 // Events - sent from MatchController to TUI
 
 // MatchUpdateMsg is sent every phase with current match state and latest event
@@ -53,4 +61,15 @@ type FulltimeMsg struct {
 // MatchPausedMsg is sent when match is paused by user
 type MatchPausedMsg struct {
 	Match *domain.Match
+}
+
+// MatchResumedMsg is sent when match is resumed by user
+type MatchResumedMsg struct {
+	Match *domain.Match
+}
+
+type SubstitutionMadeMsg struct {
+	Match     *domain.Match
+	PlayerOut *domain.MatchPlayerParticipant
+	PlayerIn  *domain.MatchPlayerParticipant
 }

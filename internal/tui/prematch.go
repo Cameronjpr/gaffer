@@ -94,27 +94,40 @@ func (m *PreMatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *PreMatchModel) View() string {
-	// Calculate column width
 	colWidth := m.width / 3
 
-	// Home team section
+	header := " PREMATCH "
 
-	// Match info section
-	matchContent := lipgloss.JoinVertical(lipgloss.Center,
+	// Footer with controls
+	footer := " PREMATCH "
+
+	// Calculate heights
+	headerHeight := lipgloss.Height(header)
+	footerHeight := lipgloss.Height(footer)
+	contentHeight := m.height - headerHeight - footerHeight
+
+	// Main match content - three columns
+	homeTeamSheet := components.TeamSheet(m.match.Home)
+	awayTeamSheet := components.TeamSheet(m.match.Away)
+	prematchMessaage := lipgloss.JoinVertical(lipgloss.Center,
 		fmt.Sprintf("%s vs %s\n\nPress Enter to start", m.match.Home.Club.Name, m.match.Away.Club.Name),
 		// m.form.View(),
 	)
 
-	homeTeamSheet := components.TeamSheet(m.match.Home)
-	awayTeamSheet := components.TeamSheet(m.match.Away)
-
-	// Create 3-column layout
-	layout := lipgloss.JoinHorizontal(
+	// Center content vertically and horizontally in available space
+	mainContent := lipgloss.JoinHorizontal(
 		lipgloss.Top,
-		lipgloss.Place(colWidth, m.height, lipgloss.Center, lipgloss.Center, homeTeamSheet),
-		lipgloss.Place(colWidth, m.height, lipgloss.Center, lipgloss.Center, matchContent),
-		lipgloss.Place(colWidth, m.height, lipgloss.Center, lipgloss.Center, awayTeamSheet),
+		components.Centered(colWidth, m.height, homeTeamSheet),
+		components.Centered(colWidth, m.height, prematchMessaage),
+		components.Centered(colWidth, m.height, awayTeamSheet),
 	)
 
-	return layout
+	// Use ScreenLayout to organize header, content, footer
+	sections := []components.ScreenSection{
+		{Height: headerHeight, Content: header},
+		{Height: contentHeight, Content: mainContent},
+		{Height: footerHeight, Content: footer},
+	}
+
+	return components.ScreenLayout(m.height, sections)
 }

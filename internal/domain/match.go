@@ -132,14 +132,14 @@ func (m *Match) GetMaxPlayerNameLength() int {
 	maxNameLen := 0
 
 	// Check home team
-	for _, player := range m.Home.Players {
+	for _, player := range m.Home.CurrentXI {
 		if len(player.Player.Name) > maxNameLen {
 			maxNameLen = len(player.Player.Name)
 		}
 	}
 
 	// Check away team
-	for _, player := range m.Away.Players {
+	for _, player := range m.Away.CurrentXI {
 		if len(player.Player.Name) > maxNameLen {
 			maxNameLen = len(player.Player.Name)
 		}

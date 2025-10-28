@@ -6,9 +6,21 @@ import (
 )
 
 // buildTimelineFromEvents creates a centered timeline with home and away events
-func EventsTimeline(homeEvents, awayEvents []domain.Event, colWidth int) string {
+func EventsTimeline(match *domain.Match, colWidth int) string {
 	// Calculate timeline column width (half of ticker width minus gap)
 	timelineWidth := (colWidth / 2) - 2
+
+	var homeEvents []domain.Event
+	var awayEvents []domain.Event
+	for _, event := range match.Events {
+		if event.Type == domain.GoalEvent {
+			if event.For == match.Home {
+				homeEvents = append(homeEvents, event)
+			} else if event.For == match.Away {
+				awayEvents = append(awayEvents, event)
+			}
+		}
+	}
 
 	homeTimelineStyled := EventsTimelineForTeam(homeEvents, timelineWidth, lipgloss.Right)
 	awayTimelineStyled := EventsTimelineForTeam(awayEvents, timelineWidth, lipgloss.Left)

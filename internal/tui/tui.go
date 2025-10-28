@@ -74,7 +74,7 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Update the prematch and match models with the new match
 		m.prematch = NewPreMatchModel(m.currentMatch)
-		m.match = NewMatchModel(m.currentMatch)
+		m.match = NewMatchModel(m.currentMatch, m.managerHub.ChosenClub.ID)
 
 		m.mode = PreMatchMode
 		// Send WindowSizeMsg to newly activated model
@@ -123,7 +123,7 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Update the child models to point to the new match
 		m.prematch = NewPreMatchModel(m.currentMatch)
-		m.match = NewMatchModel(m.currentMatch)
+		m.match = NewMatchModel(m.currentMatch, m.managerHub.ChosenClub.ID)
 
 		// Recalculate league table with latest results
 		leagueTable, err := m.matchRepo.CalculateLeagueTable(m.clubs, m.fixtures)
