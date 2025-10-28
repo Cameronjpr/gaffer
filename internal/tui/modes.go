@@ -18,24 +18,26 @@ const (
 )
 
 type AppModel struct {
-	clubRepo     domain.ClubRepository
-	fixtureRepo  domain.FixtureRepository
-	matchRepo    *repository.MatchRepo
-	mode         Mode
-	clubs        []*domain.ClubWithPlayers
-	fixtures     []*domain.Fixture
-	currentMatch *domain.Match
-	menu         *MenuModel
-	onboarding   *OnboardingModel
-	managerHub   *ManagerHubModel
-	prematch     *PreMatchModel
-	match        *MatchModel
-	width        int
-	height       int
+	gameStateRepo *repository.GameStateRepo
+	clubRepo      domain.ClubRepository // address this
+	fixtureRepo   domain.FixtureRepository
+	matchRepo     *repository.MatchRepo
+	mode          Mode
+	clubs         []*domain.ClubWithPlayers
+	fixtures      []*domain.Fixture
+	currentMatch  *domain.Match
+	menu          *MenuModel
+	onboarding    *OnboardingModel
+	managerHub    *ManagerHubModel
+	prematch      *PreMatchModel
+	match         *MatchModel
+	width         int
+	height        int
 }
 
 func NewModel(queries *db.Queries) *AppModel {
 	// Create repositories
+	gameStateRepo := repository.NewGameStateRepository(queries)
 	clubRepo := repository.NewClubRepository(queries)
 	fixtureRepo := repository.NewFixtureRepository(queries, clubRepo)
 	matchRepo := repository.NewMatchRepository(queries)
@@ -53,13 +55,14 @@ func NewModel(queries *db.Queries) *AppModel {
 	}
 
 	return &AppModel{
-		clubRepo:     clubRepo,
-		fixtureRepo:  fixtureRepo,
-		matchRepo:    matchRepo,
-		mode:         MenuMode,
-		clubs:        clubs,
-		fixtures:     fixtures,
-		currentMatch: nil,
+		gameStateRepo: gameStateRepo,
+		clubRepo:      clubRepo,
+		fixtureRepo:   fixtureRepo,
+		matchRepo:     matchRepo,
+		mode:          MenuMode,
+		clubs:         clubs,
+		fixtures:      fixtures,
+		currentMatch:  nil,
 		menu: NewMenuModel([]list.Item{
 			item("New game"),
 			item("Settings"),
@@ -76,7 +79,7 @@ func NewModel(queries *db.Queries) *AppModel {
 type goToOnboardingMsg struct{}
 
 type goToManagerHubMsg struct {
-	ClubName string
+	ClubID int64
 }
 
 type startPreMatchMsg struct{}

@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cameronjpr/gaffer/internal/domain"
@@ -34,16 +35,13 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tick()
 
 	case goToManagerHubMsg:
-		m.mode = ManagerHubMode
-		var club *domain.Club
-		for _, c := range m.clubs {
-			if c.Club.Name == msg.ClubName {
-				club = c.Club
-				break
-			}
+		club, err := m.clubRepo.GetByID(msg.ClubID)
+		if err != nil {
+			return m, tea.Quit
 		}
 
-		fixtures, err := m.fixtureRepo.GetByClubID(club.ID)
+		// Get only unplayed fixtures for the hub display
+		fixtures, err := m.fixtureRepo.GetUnplayedByClubID(club.Club.ID)
 		if err != nil {
 			return m, tea.Quit
 		}
@@ -54,7 +52,8 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
-		m.managerHub = NewManagerHubModel(club, fixtures, leagueTable)
+		m.managerHub = NewManagerHubModel(club.Club, fixtures, leagueTable)
+		m.mode = ManagerHubMode
 		m.managerHub.width = m.width
 		m.managerHub.height = m.height
 		return m, tick()
@@ -84,10 +83,6 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tick()
 
 	case startMatchMsg:
-		m.mode = MatchMode
-		// Send WindowSizeMsg to newly activated model
-		m.match.width = m.width
-		m.match.height = m.height
 
 		// Create the match record in the database
 		err := m.matchRepo.Create(m.currentMatch)
@@ -96,6 +91,10 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// For now, we still run the match even if DB create fails
 		}
 
+		m.mode = MatchMode
+		// Send WindowSizeMsg to newly activated model
+		m.match.width = m.width
+		m.match.height = m.height
 		// Initialize the match model (starts controller and begins listening)
 		return m, m.match.Init()
 
@@ -106,12 +105,10 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Save the match result to the database
 		err := m.matchRepo.SaveResult(match)
 		if err != nil {
-			// Log error but continue - in production you'd handle this better
-			// For now, we still update in-memory state even if DB save fails
+			fmt.Println("Error saving match result:", err)
 		}
 
-		// Load the next fixture for the selected club
-		// Get the next fixture for the selected club
+		// Refresh the unplayed fixtures list
 		unplayedFixtures, err := m.fixtureRepo.GetUnplayedByClubID(m.managerHub.ChosenClub.ID)
 		if err != nil {
 			return m, tea.Quit
@@ -135,6 +132,9 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			m.managerHub.LeagueTable = leagueTable
 		}
+
+		// Update the hub's fixture list to remove completed fixtures
+		m.managerHub.Fixtures = unplayedFixtures
 
 		// Go back to the hub
 		m.mode = ManagerHubMode

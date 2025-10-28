@@ -15,3 +15,7 @@ type FixtureRepository interface {
 	GetByGameweek(gameweek int) ([]*Fixture, error)
 	GetUnplayedByClubID(clubID int64) ([]*Fixture, error)
 }
+
+type GameStateRepository interface {
+	GetMostRecentGameState() (*GameState, error)
+}

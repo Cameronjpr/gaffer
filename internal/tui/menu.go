@@ -50,6 +50,8 @@ func (m *MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				switch choice {
 				case "New game":
 					return m, func() tea.Msg { return goToOnboardingMsg{} }
+				case "Continue":
+					return m, func() tea.Msg { return goToOnboardingMsg{} }
 				case "Settings":
 					// TODO: return settings mode message
 					return m, nil

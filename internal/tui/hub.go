@@ -46,8 +46,6 @@ func (m *ManagerHubModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *ManagerHubModel) View() string {
-	colWidth := m.width / 3
-
 	if m.ChosenClub == nil {
 		panic("ChosenClub is nil, cannot proceed")
 	}
@@ -55,9 +53,10 @@ func (m *ManagerHubModel) View() string {
 		Align(lipgloss.Center).
 		Width(m.width).
 		Padding(1, 2).
+		Bold(true).
 		Background(lipgloss.Color(m.ChosenClub.Background)).
 		Foreground(lipgloss.Color(m.ChosenClub.Foreground)).
-		Render("Managing " + m.ChosenClub.Name)
+		Render(m.ChosenClub.Name)
 	footer := lipgloss.NewStyle().
 		Align(lipgloss.Center).
 		Width(m.width).
@@ -69,11 +68,11 @@ func (m *ManagerHubModel) View() string {
 	}
 	fixturesView := components.Fixtures(m.Fixtures)
 
-	content := lipgloss.JoinHorizontal(
-		lipgloss.Top,
-		lipgloss.NewStyle().Padding(2).Width(colWidth).Render(fixturesView),
-		lipgloss.NewStyle().Padding(2).Width(colWidth).Render("TBC"),
-		lipgloss.NewStyle().Padding(2).Width(colWidth).Render(leagueTableView),
+	content := components.ThreeColumnLayout(
+		m.width,
+		fixturesView,
+		"",
+		leagueTableView,
 	)
 
 	main := lipgloss.NewStyle().

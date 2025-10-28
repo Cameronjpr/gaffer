@@ -16,7 +16,7 @@ type OnboardingModel struct {
 }
 
 type OnboardingFormData struct {
-	ClubName string
+	ClubID int64
 }
 
 func NewOnboardingModel(clubs []*domain.ClubWithPlayers) *OnboardingModel {
@@ -24,15 +24,15 @@ func NewOnboardingModel(clubs []*domain.ClubWithPlayers) *OnboardingModel {
 	keys := defaultMenuKeyMap()
 
 	// Build club options from clubs
-	clubOptions := make([]huh.Option[string], len(clubs))
+	clubOptions := make([]huh.Option[int64], len(clubs))
 	for i, club := range clubs {
-		clubOptions[i] = huh.NewOption(club.Club.Name, club.Club.Name)
+		clubOptions[i] = huh.NewOption(club.Club.Name, club.Club.ID)
 	}
 
 	form := huh.NewForm(
 		huh.NewGroup(
-			huh.NewSelect[string]().
-				Value(&formData.ClubName).
+			huh.NewSelect[int64]().
+				Value(&formData.ClubID).
 				Title("Choose your club:").
 				Options(clubOptions...),
 		),
@@ -78,7 +78,7 @@ func (m *OnboardingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.form.State == huh.StateCompleted {
 		cmds = append(cmds, func() tea.Msg {
 			return goToManagerHubMsg{
-				ClubName: m.formData.ClubName,
+				ClubID: m.formData.ClubID,
 			}
 		})
 	}

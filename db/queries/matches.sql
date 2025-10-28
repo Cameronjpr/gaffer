@@ -31,6 +31,9 @@ WHERE id = ?;
 -- name: DeleteMatch :exec
 DELETE FROM matches WHERE id = ?;
 
+-- name: DeleteIncompleteMatchByFixtureID :exec
+DELETE FROM matches WHERE fixture_id = ? AND is_completed = 0;
+
 -- name: CompleteMatch :exec
 UPDATE matches
 SET home_score = ?,

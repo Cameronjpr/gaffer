@@ -12,16 +12,20 @@ import (
 
 type PreMatchModel struct {
 	form     *huh.Form
-	formData *OnboardingFormData
+	formData *PreMatchFormData
 	keys     *menuKeyMap
 	match    *domain.Match
 	width    int
 	height   int
 }
 
+type PreMatchFormData struct {
+	Formation string
+}
+
 func NewPreMatchModel(match *domain.Match) *PreMatchModel {
 
-	formData := &OnboardingFormData{}
+	formData := &PreMatchFormData{}
 	keys := defaultMenuKeyMap()
 
 	// Build club options from season
@@ -33,7 +37,7 @@ func NewPreMatchModel(match *domain.Match) *PreMatchModel {
 	form := huh.NewForm(
 		huh.NewGroup(
 			huh.NewSelect[string]().
-				Value(&formData.ClubName).
+				Value(&formData.Formation).
 				Title("Choose your formation:").
 				Options(formationOptions...),
 		),
@@ -80,7 +84,8 @@ func (m *PreMatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.form.State == huh.StateCompleted {
 		cmds = append(cmds, func() tea.Msg {
 			return goToManagerHubMsg{
-				ClubName: m.formData.ClubName,
+				ClubID: m.match.Home.Club.ID,
+				/// ??????? makes no sense
 			}
 		})
 	}

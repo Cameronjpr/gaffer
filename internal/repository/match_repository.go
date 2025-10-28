@@ -21,7 +21,14 @@ func NewMatchRepository(queries *db.Queries) *MatchRepo {
 func (r *MatchRepo) Create(match *domain.Match) error {
 	ctx := context.Background()
 
-	_, err := r.queries.CreateMatch(ctx, db.CreateMatchParams{
+	// First, clean up any incomplete matches for this fixture
+	// This handles cases where a match was started but not completed
+	err := r.queries.DeleteIncompleteMatchByFixtureID(ctx, int64(match.ForFixture.ID))
+	if err != nil {
+		return fmt.Errorf("failed to clean up incomplete match: %w", err)
+	}
+
+	_, err = r.queries.CreateMatch(ctx, db.CreateMatchParams{
 		FixtureID:              int64(match.ForFixture.ID),
 		CurrentMinute:          int64(match.CurrentMinute),
 		CurrentHalf:            int64(match.CurrentHalf),

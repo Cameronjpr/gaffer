@@ -1,3 +1,13 @@
+-- Game State table
+CREATE TABLE IF NOT EXISTS game_states (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    selected_club_id INTEGER NOT NULL,
+    manager_name TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (selected_club_id) REFERENCES clubs(id) ON DELETE CASCADE
+);
+
 -- Clubs table
 CREATE TABLE IF NOT EXISTS clubs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

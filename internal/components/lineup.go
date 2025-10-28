@@ -12,8 +12,9 @@ func TeamSheet(participant *domain.MatchParticipant) string {
 		lipgloss.Left,
 		lipgloss.NewStyle().
 			Bold(true).
-			BorderStyle(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color(participant.Club.Background)).
+			Padding(1).
+			Background(lipgloss.Color(participant.Club.Background)).
+			Foreground(lipgloss.Color(participant.Club.Foreground)).
 			Render(participant.Club.Name),
 		"\n",
 
