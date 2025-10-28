@@ -9,6 +9,7 @@ import (
 )
 
 type Querier interface {
+	CompleteMatch(ctx context.Context, arg CompleteMatchParams) error
 	CreateClub(ctx context.Context, arg CreateClubParams) (Club, error)
 	CreateFixture(ctx context.Context, arg CreateFixtureParams) (Fixture, error)
 	CreateMatch(ctx context.Context, arg CreateMatchParams) (Match, error)
@@ -23,6 +24,7 @@ type Querier interface {
 	GetAllFixtures(ctx context.Context) ([]Fixture, error)
 	GetClubByID(ctx context.Context, id int64) (Club, error)
 	GetClubByName(ctx context.Context, name string) (Club, error)
+	GetCompletedMatches(ctx context.Context) ([]Match, error)
 	GetEventsByMatchID(ctx context.Context, matchID int64) ([]MatchEvent, error)
 	GetFixtureByID(ctx context.Context, id int64) (Fixture, error)
 	GetFixturesByClubID(ctx context.Context, arg GetFixturesByClubIDParams) ([]Fixture, error)
@@ -30,6 +32,7 @@ type Querier interface {
 	GetMatchByID(ctx context.Context, id int64) (Match, error)
 	GetPlayerByID(ctx context.Context, id int64) (Player, error)
 	GetPlayersByClubID(ctx context.Context, clubID int64) ([]Player, error)
+	GetUnplayedByClubID(ctx context.Context, homeTeamID int64) ([]Fixture, error)
 	UpdateMatch(ctx context.Context, arg UpdateMatchParams) error
 }
 

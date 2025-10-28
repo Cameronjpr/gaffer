@@ -30,3 +30,15 @@ WHERE id = ?;
 
 -- name: DeleteMatch :exec
 DELETE FROM matches WHERE id = ?;
+
+-- name: CompleteMatch :exec
+UPDATE matches
+SET home_score = ?,
+    away_score = ?,
+    is_completed = 1,
+    completed_at = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
+WHERE fixture_id = ?;
+
+-- name: GetCompletedMatches :many
+SELECT * FROM matches WHERE is_completed = 1 ORDER BY completed_at DESC;

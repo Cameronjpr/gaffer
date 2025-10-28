@@ -13,10 +13,5 @@ type FixtureRepository interface {
 	GetByID(id int64) (*Fixture, error)
 	GetByClubID(clubID int64) ([]*Fixture, error)
 	GetByGameweek(gameweek int) ([]*Fixture, error)
-}
-
-// SeasonRepository handles persistence of seasons
-type SeasonRepository interface {
-	Save(season *Season) error
-	Load(id int) (*Season, error)
+	GetUnplayedByClubID(clubID int64) ([]*Fixture, error)
 }

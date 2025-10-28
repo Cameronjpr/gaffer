@@ -34,6 +34,8 @@ type Match struct {
 	AwayScore              int64        `json:"away_score"`
 	ActiveZone             int64        `json:"active_zone"`
 	HomeAttackingDirection int64        `json:"home_attacking_direction"`
+	IsCompleted            int64        `json:"is_completed"`
+	CompletedAt            sql.NullTime `json:"completed_at"`
 	CreatedAt              sql.NullTime `json:"created_at"`
 	UpdatedAt              sql.NullTime `json:"updated_at"`
 }

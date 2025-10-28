@@ -9,6 +9,27 @@ import (
 	"context"
 )
 
+const completeMatch = `-- name: CompleteMatch :exec
+UPDATE matches
+SET home_score = ?,
+    away_score = ?,
+    is_completed = 1,
+    completed_at = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
+WHERE fixture_id = ?
+`
+
+type CompleteMatchParams struct {
+	HomeScore int64 `json:"home_score"`
+	AwayScore int64 `json:"away_score"`
+	FixtureID int64 `json:"fixture_id"`
+}
+
+func (q *Queries) CompleteMatch(ctx context.Context, arg CompleteMatchParams) error {
+	_, err := q.db.ExecContext(ctx, completeMatch, arg.HomeScore, arg.AwayScore, arg.FixtureID)
+	return err
+}
+
 const createMatch = `-- name: CreateMatch :one
 INSERT INTO matches (
     fixture_id,
@@ -20,7 +41,7 @@ INSERT INTO matches (
     home_attacking_direction
 )
 VALUES (?, ?, ?, ?, ?, ?, ?)
-RETURNING id, fixture_id, current_minute, current_half, home_score, away_score, active_zone, home_attacking_direction, created_at, updated_at
+RETURNING id, fixture_id, current_minute, current_half, home_score, away_score, active_zone, home_attacking_direction, is_completed, completed_at, created_at, updated_at
 `
 
 type CreateMatchParams struct {
@@ -53,6 +74,8 @@ func (q *Queries) CreateMatch(ctx context.Context, arg CreateMatchParams) (Match
 		&i.AwayScore,
 		&i.ActiveZone,
 		&i.HomeAttackingDirection,
+		&i.IsCompleted,
+		&i.CompletedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -68,8 +91,48 @@ func (q *Queries) DeleteMatch(ctx context.Context, id int64) error {
 	return err
 }
 
+const getCompletedMatches = `-- name: GetCompletedMatches :many
+SELECT id, fixture_id, current_minute, current_half, home_score, away_score, active_zone, home_attacking_direction, is_completed, completed_at, created_at, updated_at FROM matches WHERE is_completed = 1 ORDER BY completed_at DESC
+`
+
+func (q *Queries) GetCompletedMatches(ctx context.Context) ([]Match, error) {
+	rows, err := q.db.QueryContext(ctx, getCompletedMatches)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Match{}
+	for rows.Next() {
+		var i Match
+		if err := rows.Scan(
+			&i.ID,
+			&i.FixtureID,
+			&i.CurrentMinute,
+			&i.CurrentHalf,
+			&i.HomeScore,
+			&i.AwayScore,
+			&i.ActiveZone,
+			&i.HomeAttackingDirection,
+			&i.IsCompleted,
+			&i.CompletedAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getMatchByFixtureID = `-- name: GetMatchByFixtureID :one
-SELECT id, fixture_id, current_minute, current_half, home_score, away_score, active_zone, home_attacking_direction, created_at, updated_at FROM matches WHERE fixture_id = ? LIMIT 1
+SELECT id, fixture_id, current_minute, current_half, home_score, away_score, active_zone, home_attacking_direction, is_completed, completed_at, created_at, updated_at FROM matches WHERE fixture_id = ? LIMIT 1
 `
 
 func (q *Queries) GetMatchByFixtureID(ctx context.Context, fixtureID int64) (Match, error) {
@@ -84,6 +147,8 @@ func (q *Queries) GetMatchByFixtureID(ctx context.Context, fixtureID int64) (Mat
 		&i.AwayScore,
 		&i.ActiveZone,
 		&i.HomeAttackingDirection,
+		&i.IsCompleted,
+		&i.CompletedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -91,7 +156,7 @@ func (q *Queries) GetMatchByFixtureID(ctx context.Context, fixtureID int64) (Mat
 }
 
 const getMatchByID = `-- name: GetMatchByID :one
-SELECT id, fixture_id, current_minute, current_half, home_score, away_score, active_zone, home_attacking_direction, created_at, updated_at FROM matches WHERE id = ? LIMIT 1
+SELECT id, fixture_id, current_minute, current_half, home_score, away_score, active_zone, home_attacking_direction, is_completed, completed_at, created_at, updated_at FROM matches WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetMatchByID(ctx context.Context, id int64) (Match, error) {
@@ -106,6 +171,8 @@ func (q *Queries) GetMatchByID(ctx context.Context, id int64) (Match, error) {
 		&i.AwayScore,
 		&i.ActiveZone,
 		&i.HomeAttackingDirection,
+		&i.IsCompleted,
+		&i.CompletedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

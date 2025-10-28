@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS matches (
     away_score INTEGER NOT NULL DEFAULT 0,
     active_zone INTEGER NOT NULL DEFAULT 0,
     home_attacking_direction INTEGER NOT NULL DEFAULT 1,
+    is_completed INTEGER NOT NULL DEFAULT 0 CHECK(is_completed IN (0, 1)),
+    completed_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (fixture_id) REFERENCES fixtures(id) ON DELETE CASCADE

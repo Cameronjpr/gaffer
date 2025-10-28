@@ -19,13 +19,13 @@ type OnboardingFormData struct {
 	ClubName string
 }
 
-func NewOnboardingModel(season *domain.Season) *OnboardingModel {
+func NewOnboardingModel(clubs []*domain.ClubWithPlayers) *OnboardingModel {
 	formData := &OnboardingFormData{}
 	keys := defaultMenuKeyMap()
 
-	// Build club options from season
-	clubOptions := make([]huh.Option[string], len(season.Clubs))
-	for i, club := range season.Clubs {
+	// Build club options from clubs
+	clubOptions := make([]huh.Option[string], len(clubs))
+	for i, club := range clubs {
 		clubOptions[i] = huh.NewOption(club.Club.Name, club.Club.Name)
 	}
 

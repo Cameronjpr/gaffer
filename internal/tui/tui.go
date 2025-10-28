@@ -36,7 +36,7 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case goToManagerHubMsg:
 		m.mode = ManagerHubMode
 		var club *domain.Club
-		for _, c := range m.season.Clubs {
+		for _, c := range m.clubs {
 			if c.Club.Name == msg.ClubName {
 				club = c.Club
 				break
@@ -48,19 +48,29 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
-		m.managerHub = NewManagerHubModel(m.season, club, fixtures)
+		// Calculate league table from database
+		leagueTable, err := m.matchRepo.CalculateLeagueTable(m.clubs, m.fixtures)
+		if err != nil {
+			return m, tea.Quit
+		}
+
+		m.managerHub = NewManagerHubModel(club, fixtures, leagueTable)
 		m.managerHub.width = m.width
 		m.managerHub.height = m.height
 		return m, tick()
 
 	case startPreMatchMsg:
 		// Get the next fixture for the selected club
-		nextFixture, err := m.season.GetNextFixtureForClub(m.managerHub.ChosenClub)
+		unplayedFixtures, err := m.fixtureRepo.GetUnplayedByClubID(m.managerHub.ChosenClub.ID)
 		if err != nil {
-			// No more matches for this club
 			return m, tea.Quit
 		}
-		nextMatch := domain.NewMatchFromFixture(nextFixture)
+
+		if len(unplayedFixtures) == 0 {
+			return m, tea.Quit
+		}
+
+		nextMatch := domain.NewMatchFromFixture(unplayedFixtures[0])
 		m.currentMatch = nextMatch
 
 		// Update the prematch and match models with the new match
@@ -78,6 +88,14 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Send WindowSizeMsg to newly activated model
 		m.match.width = m.width
 		m.match.height = m.height
+
+		// Create the match record in the database
+		err := m.matchRepo.Create(m.currentMatch)
+		if err != nil {
+			// Log error but continue - in production you'd handle this better
+			// For now, we still run the match even if DB create fails
+		}
+
 		// Initialize the match model (starts controller and begins listening)
 		return m, m.match.Init()
 
@@ -85,18 +103,38 @@ func (m *AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		match := msg.match
 		match.ForFixture.Result = msg.match
 
-		// Load the next fixture for the selected club
-		nextFixture, err := m.season.GetNextFixtureForClub(m.managerHub.ChosenClub)
+		// Save the match result to the database
+		err := m.matchRepo.SaveResult(match)
 		if err != nil {
-			// No more matches for this club, for now we just quit
+			// Log error but continue - in production you'd handle this better
+			// For now, we still update in-memory state even if DB save fails
+		}
+
+		// Load the next fixture for the selected club
+		// Get the next fixture for the selected club
+		unplayedFixtures, err := m.fixtureRepo.GetUnplayedByClubID(m.managerHub.ChosenClub.ID)
+		if err != nil {
 			return m, tea.Quit
 		}
-		nextMatch := domain.NewMatchFromFixture(nextFixture)
+
+		if len(unplayedFixtures) == 0 {
+			return m, tea.Quit
+		}
+
+		nextMatch := domain.NewMatchFromFixture(unplayedFixtures[0])
 		m.currentMatch = nextMatch
 
 		// Update the child models to point to the new match
 		m.prematch = NewPreMatchModel(m.currentMatch)
 		m.match = NewMatchModel(m.currentMatch)
+
+		// Recalculate league table with latest results
+		leagueTable, err := m.matchRepo.CalculateLeagueTable(m.clubs, m.fixtures)
+		if err != nil {
+			// Log error but continue
+		} else {
+			m.managerHub.LeagueTable = leagueTable
+		}
 
 		// Go back to the hub
 		m.mode = ManagerHubMode

@@ -77,6 +77,27 @@ func (r *FixtureRepo) GetByClubID(clubID int64) ([]*domain.Fixture, error) {
 	return fixtures, nil
 }
 
+// GetUnplayedByClubID fetches all unplayed fixtures for a specific club
+func (r *FixtureRepo) GetUnplayedByClubID(clubID int64) ([]*domain.Fixture, error) {
+	ctx := context.Background()
+
+	dbFixtures, err := r.queries.GetUnplayedByClubID(ctx, clubID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get unplayed fixtures for club %d: %w", clubID, err)
+	}
+
+	fixtures := make([]*domain.Fixture, len(dbFixtures))
+	for i, dbFixture := range dbFixtures {
+		fixture, err := r.dbFixtureToDomain(dbFixture)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert fixture %d: %w", dbFixture.ID, err)
+		}
+		fixtures[i] = fixture
+	}
+
+	return fixtures, nil
+}
+
 // GetByGameweek fetches all fixtures for a specific gameweek
 func (r *FixtureRepo) GetByGameweek(gameweek int) ([]*domain.Fixture, error) {
 	ctx := context.Background()

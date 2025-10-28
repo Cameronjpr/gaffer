@@ -132,3 +132,41 @@ func (q *Queries) GetFixturesByClubID(ctx context.Context, arg GetFixturesByClub
 	}
 	return items, nil
 }
+
+const getUnplayedByClubID = `-- name: GetUnplayedByClubID :many
+SELECT f.id, f.gameweek, f.home_team_id, f.away_team_id, f.created_at
+FROM fixtures f
+LEFT JOIN matches m ON m.fixture_id = f.id AND m.is_completed = 1
+WHERE (f.home_team_id = ?1 OR f.away_team_id = ?1)
+  AND m.id IS NULL
+ORDER BY f.gameweek, f.id
+`
+
+func (q *Queries) GetUnplayedByClubID(ctx context.Context, homeTeamID int64) ([]Fixture, error) {
+	rows, err := q.db.QueryContext(ctx, getUnplayedByClubID, homeTeamID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Fixture{}
+	for rows.Next() {
+		var i Fixture
+		if err := rows.Scan(
+			&i.ID,
+			&i.Gameweek,
+			&i.HomeTeamID,
+			&i.AwayTeamID,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

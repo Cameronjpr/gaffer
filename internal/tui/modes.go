@@ -20,8 +20,10 @@ const (
 type AppModel struct {
 	clubRepo     domain.ClubRepository
 	fixtureRepo  domain.FixtureRepository
+	matchRepo    *repository.MatchRepo
 	mode         Mode
-	season       *domain.Season
+	clubs        []*domain.ClubWithPlayers
+	fixtures     []*domain.Fixture
 	currentMatch *domain.Match
 	menu         *MenuModel
 	onboarding   *OnboardingModel
@@ -36,6 +38,7 @@ func NewModel(queries *db.Queries) *AppModel {
 	// Create repositories
 	clubRepo := repository.NewClubRepository(queries)
 	fixtureRepo := repository.NewFixtureRepository(queries, clubRepo)
+	matchRepo := repository.NewMatchRepository(queries)
 
 	// Get all clubs with players from repository
 	clubs, err := clubRepo.GetAll()
@@ -43,31 +46,28 @@ func NewModel(queries *db.Queries) *AppModel {
 		panic(err)
 	}
 
-	season := domain.NewSeason(clubs)
-	season.GenerateAllFixtures()
-
-	// Get the first fixture and create a match from it
-	nextFixture, err := season.GetNextFixture()
+	// Get all fixtures
+	fixtures, err := fixtureRepo.GetAll()
 	if err != nil {
-		// In a real app, you'd handle this gracefully
 		panic(err)
 	}
-	currentMatch := domain.NewMatchFromFixture(nextFixture)
 
 	return &AppModel{
 		clubRepo:     clubRepo,
 		fixtureRepo:  fixtureRepo,
+		matchRepo:    matchRepo,
 		mode:         MenuMode,
-		season:       season,
-		currentMatch: currentMatch,
+		clubs:        clubs,
+		fixtures:     fixtures,
+		currentMatch: nil,
 		menu: NewMenuModel([]list.Item{
 			item("New game"),
 			item("Settings"),
 		}),
-		onboarding: NewOnboardingModel(season),
-		managerHub: NewManagerHubModel(season, nil, nil),
-		prematch:   NewPreMatchModel(currentMatch),
-		match:      NewMatchModel(currentMatch),
+		onboarding: NewOnboardingModel(clubs),
+		managerHub: NewManagerHubModel(nil, nil, nil),
+		prematch:   NewPreMatchModel(nil),
+		match:      NewMatchModel(nil),
 		width:      0,
 		height:     0,
 	}

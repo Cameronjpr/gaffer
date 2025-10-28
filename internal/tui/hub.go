@@ -8,7 +8,6 @@ import (
 )
 
 type ManagerHubModel struct {
-	Season      *domain.Season
 	ChosenClub  *domain.Club
 	Fixtures    []*domain.Fixture
 	LeagueTable *domain.LeagueTable
@@ -16,14 +15,13 @@ type ManagerHubModel struct {
 	height      int
 }
 
-func NewManagerHubModel(season *domain.Season, club *domain.Club, fixtures []*domain.Fixture) *ManagerHubModel {
+func NewManagerHubModel(club *domain.Club, fixtures []*domain.Fixture, leagueTable *domain.LeagueTable) *ManagerHubModel {
 	return &ManagerHubModel{
-		ChosenClub: club,
-		Season:     season,
-		Fixtures:   fixtures,
+		ChosenClub:  club,
+		Fixtures:    fixtures,
+		LeagueTable: leagueTable,
 	}
 }
-
 func (m *ManagerHubModel) Init() tea.Cmd {
 	return nil
 }
@@ -65,7 +63,10 @@ func (m *ManagerHubModel) View() string {
 		Width(m.width).
 		Render("Press [Space] to start pre-match")
 
-	leagueTableView := components.Table(m.Season.GetLeagueTable())
+	leagueTableView := ""
+	if m.LeagueTable != nil {
+		leagueTableView = components.Table(*m.LeagueTable)
+	}
 	fixturesView := components.Fixtures(m.Fixtures)
 
 	content := lipgloss.JoinHorizontal(
