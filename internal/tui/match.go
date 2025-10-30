@@ -8,15 +8,25 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// MatchTab represents the different tabs in the match interface
+type MatchTab int
+
+const (
+	MatchViewTab MatchTab = iota
+	SubstitutionsTab
+	TacticsTab
+)
+
 type MatchModel struct {
-	match            *domain.Match
-	controller       *simulation.MatchController
-	latestEvent      *domain.Event            // For commentary and timeline
-	userTeam         *domain.MatchParticipant // Direct pointer to user's controlled team
-	width            int
-	height           int
-	showSubModal     bool
-	showTacticsModal bool
+	match             *domain.Match
+	controller        *simulation.MatchController
+	latestEvent       *domain.Event            // For commentary and timeline
+	userTeam          *domain.MatchParticipant // Direct pointer to user's controlled team
+	width             int
+	height            int
+	currentTab        MatchTab
+	substitutionModel *SubstitutionModel
+	tacticsModel      *TacticsModel
 }
 
 func NewMatchModel(match *domain.Match, userClubID int64) *MatchModel {
@@ -24,20 +34,32 @@ func NewMatchModel(match *domain.Match, userClubID int64) *MatchModel {
 
 	// Determine which team the user controls (handle nil match during initialization)
 	var userTeam *domain.MatchParticipant
+	var substitutionModel *SubstitutionModel
+	var tacticsModel *TacticsModel
+
 	if match != nil {
 		if match.Home.Club.ID == userClubID {
 			userTeam = match.Home
 		} else {
 			userTeam = match.Away
 		}
+
+		// Initialize sub-models only if we have a valid userTeam
+		if userTeam != nil {
+			substitutionModel = NewSubstitutionModel(userTeam.CurrentXI, userTeam.Bench)
+			tacticsModel = NewTacticsModel(userTeam)
+		}
 	}
 
 	// Don't start controller yet - wait for Init()
 	return &MatchModel{
-		match:       match,
-		controller:  controller,
-		userTeam:    userTeam,
-		latestEvent: nil,
+		match:             match,
+		controller:        controller,
+		userTeam:          userTeam,
+		latestEvent:       nil,
+		currentTab:        MatchViewTab, // Start on match view
+		substitutionModel: substitutionModel,
+		tacticsModel:      tacticsModel,
 	}
 }
 
@@ -72,34 +94,83 @@ func waitForMatchEvent(controller *simulation.MatchController) tea.Cmd {
 }
 
 func (m *MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// Handle substitution execution message
 	switch msg := msg.(type) {
+	case executeSubstitutionMsg:
+		// Send substitution command to controller
+		m.controller.SendCommand(simulation.SubstitutePlayerCmd{
+			Participant: m.userTeam,
+			PlayerOut:   msg.playerOut,
+			PlayerIn:    msg.playerIn,
+		})
+		// Switch back to match view after substitution
+		m.currentTab = MatchViewTab
+		return m, waitForMatchEvent(m.controller)
+	}
+
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		// Forward to sub-models if they exist
+		if m.substitutionModel != nil {
+			m.substitutionModel.Update(msg)
+		}
+		if m.tacticsModel != nil {
+			m.tacticsModel.Update(msg)
+		}
+		return m, nil
+
 	case tea.KeyMsg:
+		// Global tab switching (m/s/t keys)
 		switch msg.Type {
-		case tea.KeyEnter:
-			if m.showSubModal {
-				m.controller.SendCommand(simulation.SubstitutePlayerCmd{
-					Participant: m.userTeam,
-					PlayerIn:    m.userTeam.Bench[0],
-					PlayerOut:   m.userTeam.CurrentXI[0],
-				})
-			}
-			return m, waitForMatchEvent(m.controller)
-		case tea.KeySpace:
-			m.controller.SendCommand(simulation.TogglePausedCmd{})
-			return m, waitForMatchEvent(m.controller)
-		case tea.KeyRight:
-			m.controller.SendCommand(simulation.SpeedUpCmd{})
-			return m, waitForMatchEvent(m.controller)
-		case tea.KeyLeft:
-			m.controller.SendCommand(simulation.SlowDownCmd{})
-			return m, waitForMatchEvent(m.controller)
 		case tea.KeyRunes:
 			switch msg.Runes[0] {
+			case 'm':
+				// Switch to match view
+				m.currentTab = MatchViewTab
+				return m, nil
 			case 's':
-				m.showSubModal = !m.showSubModal
-				return m, waitForMatchEvent(m.controller)
+				// Switch to substitutions tab
+				if m.currentTab != SubstitutionsTab {
+					m.currentTab = SubstitutionsTab
+					// Pause match when entering subs tab
+					m.controller.SendCommand(simulation.PauseMatchCmd{})
+				}
+				return m, nil
 			case 't':
-				m.showTacticsModal = !m.showTacticsModal
+				// Switch to tactics tab
+				if m.currentTab != TacticsTab {
+					m.currentTab = TacticsTab
+					// Pause match when entering tactics tab
+					m.controller.SendCommand(simulation.PauseMatchCmd{})
+				}
+				return m, nil
+			}
+		}
+
+		// Forward key events to the active tab
+		if m.currentTab == SubstitutionsTab && m.substitutionModel != nil {
+			var cmd tea.Cmd
+			_, cmd = m.substitutionModel.Update(msg)
+			return m, cmd
+		} else if m.currentTab == TacticsTab && m.tacticsModel != nil {
+			var cmd tea.Cmd
+			_, cmd = m.tacticsModel.Update(msg)
+			return m, cmd
+		}
+
+		// Match view specific controls
+		if m.currentTab == MatchViewTab {
+			switch msg.Type {
+			case tea.KeySpace:
+				m.controller.SendCommand(simulation.TogglePausedCmd{})
+				return m, waitForMatchEvent(m.controller)
+			case tea.KeyRight:
+				m.controller.SendCommand(simulation.SpeedUpCmd{})
+				return m, waitForMatchEvent(m.controller)
+			case tea.KeyLeft:
+				m.controller.SendCommand(simulation.SlowDownCmd{})
 				return m, waitForMatchEvent(m.controller)
 			}
 		}
@@ -139,6 +210,8 @@ func (m *MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case simulation.SubstitutionMadeMsg:
 		m.match = msg.Match
+		// Switch back to match view after substitution executes
+		m.currentTab = MatchViewTab
 		return m, waitForMatchEvent(m.controller)
 	}
 
@@ -146,56 +219,94 @@ func (m *MatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *MatchModel) View() string {
-	colWidth := m.width / 3
+	// Shared header with game state
+	header := components.MatchHeader(m.width, m.match, m.userTeam)
 
-	// Show substitution modal if active
-	if m.showSubModal {
-		// TODO: Implement substitution modal content
-		modalContent := components.SubstitutionsModal(m.userTeam.CurrentXI, m.userTeam.Bench)
-		return components.SimpleModal(m.width, m.height, "Make Substitution – press [S] to close", modalContent)
+	// Content and footer based on current tab
+	var content string
+	var hotkeys []components.HotkeyBinding
+
+	switch m.currentTab {
+	case MatchViewTab:
+		content = m.renderMatchView()
+		hotkeys = []components.HotkeyBinding{
+			{Key: "[S]", Description: "Subs"},
+			{Key: "[T]", Description: "Tactics"},
+			{Key: "Space", Description: "Pause"},
+			{Key: "←→", Description: "Speed"},
+			{Key: "Esc", Description: "Menu"},
+		}
+
+	case SubstitutionsTab:
+		if m.substitutionModel != nil {
+			content = m.substitutionModel.View()
+		} else {
+			content = "Substitution view not available"
+		}
+		hotkeys = []components.HotkeyBinding{
+			{Key: "[M]", Description: "Match"},
+			{Key: "[T]", Description: "Tactics"},
+			{Key: "←→/Tab", Description: "Switch"},
+			{Key: "Space", Description: "Select"},
+			{Key: "Enter", Description: "Confirm"},
+		}
+
+	case TacticsTab:
+		if m.tacticsModel != nil {
+			content = m.tacticsModel.View()
+		} else {
+			content = "Tactics view not available"
+		}
+		hotkeys = []components.HotkeyBinding{
+			{Key: "[M]", Description: "Match"},
+			{Key: "[S]", Description: "Subs"},
+		}
 	}
 
-	if m.showTacticsModal {
-		modalContent := "Coming soon"
-		return components.SimpleModal(m.width, m.height, "Adjust Tactics – press [T] to close", modalContent)
-	}
-
-	// Possession indicator header
-	possessionIndicator := lipgloss.NewStyle().
-		Width(m.width).
-		Border(lipgloss.NormalBorder(), false, false, true, false).
-		BorderBottomBackground(lipgloss.Color(m.match.TeamInPossession.Club.Background)).
-		Render()
-
-	// Footer with controls
-	footer := components.MatchToolbar(m.width, m.match)
+	footer := components.HotkeyGuide(m.width, hotkeys)
 
 	// Calculate heights
-	headerHeight := lipgloss.Height(possessionIndicator)
+	headerHeight := lipgloss.Height(header)
 	footerHeight := lipgloss.Height(footer)
 	contentHeight := m.height - headerHeight - footerHeight
+
+	// Center content in available space
+	centeredContent := components.Centered(m.width, contentHeight, content)
+
+	// Use ScreenLayout to organize header, content, footer
+	sections := []components.ScreenSection{
+		{Height: headerHeight, Content: header},
+		{Height: contentHeight, Content: centeredContent},
+		{Height: footerHeight, Content: footer},
+	}
+
+	return components.ScreenLayout(m.height, sections)
+}
+
+// renderMatchView renders the main match view tab
+func (m *MatchModel) renderMatchView() string {
+	if m.match == nil {
+		return "Match not initialized"
+	}
+
+	colWidth := m.width / 3
 
 	// Main match content - three columns
 	homeTeamSheet := components.TeamSheet(m.match.Home)
 	awayTeamSheet := components.TeamSheet(m.match.Away)
 	matchActionView := components.MatchActionView(colWidth, m.controller.GetSpeed(), m.match)
 
+	// Add padding/spacing between columns
+	spacer := "  "
+
 	matchContent := lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		homeTeamSheet,
+		spacer,
 		matchActionView,
+		spacer,
 		awayTeamSheet,
 	)
 
-	// Center content vertically and horizontally in available space
-	matchContent = components.Centered(m.width, contentHeight, matchContent)
-
-	// Use ScreenLayout to organize header, content, footer
-	sections := []components.ScreenSection{
-		{Height: headerHeight, Content: possessionIndicator},
-		{Height: contentHeight, Content: matchContent},
-		{Height: footerHeight, Content: footer},
-	}
-
-	return components.ScreenLayout(m.height, sections)
+	return matchContent
 }

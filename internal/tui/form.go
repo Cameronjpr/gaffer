@@ -12,7 +12,6 @@ type menuKeyMap struct {
 
 func defaultMenuKeyMap() *menuKeyMap {
 	keys := &menuKeyMap{
-		Exit:     key.NewBinding(key.WithKeys("esc"), key.WithHelp("escape", "exit")),
 		formKeys: huh.NewDefaultKeyMap(),
 	}
 	keys.formKeys.Quit.SetEnabled(false)

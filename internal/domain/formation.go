@@ -16,6 +16,7 @@ type Position struct {
 	Name               string
 	AttackingEastZones []PitchZone
 	AttackingWestZones []PitchZone
+	BaseStaminaDrain   float64
 }
 
 var Positions = []Position{

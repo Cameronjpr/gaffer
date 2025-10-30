@@ -10,7 +10,7 @@ import (
 type MatchPlayerParticipant struct {
 	Player   *Player
 	Position string
-	Stamina  int
+	Stamina  float64
 }
 
 // MatchParticipant represents a club participating in a specific match
@@ -38,12 +38,14 @@ func NewMatchParticipant(club *Club, players []Player) *MatchParticipant {
 			currentXI = append(currentXI, &MatchPlayerParticipant{
 				Player:   &players[i],
 				Position: positions[i],
+				Stamina:  100,
 			})
 		} else {
 			// Remaining players go on the bench (no specific position)
 			bench = append(bench, &MatchPlayerParticipant{
 				Player:   &players[i],
 				Position: "", // Bench players don't have assigned positions
+				Stamina:  100,
 			})
 		}
 	}
@@ -179,9 +181,9 @@ func (p *MatchParticipant) GetLineup(match *Match) string {
 }
 
 func (p *MatchParticipant) DrainStamina(hasPossession bool) {
-	amount := 1
+	amount := 0.2
 	if !hasPossession {
-		amount = 2
+		amount = 0.3
 	}
 	for _, player := range p.CurrentXI {
 		player.DrainStamina(amount)
@@ -189,11 +191,11 @@ func (p *MatchParticipant) DrainStamina(hasPossession bool) {
 
 }
 
-func (p *MatchPlayerParticipant) GetStamina() int {
+func (p *MatchPlayerParticipant) GetStamina() float64 {
 	return p.Stamina
 }
 
-func (p *MatchPlayerParticipant) DrainStamina(amount int) {
+func (p *MatchPlayerParticipant) DrainStamina(amount float64) {
 	p.Stamina -= amount
 	if p.Stamina < 0 {
 		p.Stamina = 0
